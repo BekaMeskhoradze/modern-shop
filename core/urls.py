@@ -1,11 +1,13 @@
+# core/urls.py
 from django.urls import path
-from . import views
+from .views import IndexView, CatalogView, ProductDetailView, SearchView
 
-app_name = 'core'
+app_name = "core"
 
 urlpatterns = [
-    path('', views.IndexView.as_view(), name='index'),
-    path('catalog/', views.CatalogView.as_view(), name='catalog_all'),
-    path('catalog/<slug:category_slug>/', views.CatalogView.as_view(), name='catalog_category'),
-    path('product/<slug:slug>/', views.ProductDetailView.as_view(), name='product_detail'),
+    path("", IndexView.as_view(), name="index"),
+    path("catalog/", CatalogView.as_view(), name="catalog_all"),
+    path("catalog/<slug:category_slug>/", CatalogView.as_view(), name="catalog_category"),
+    path("product/<slug:slug>/", ProductDetailView.as_view(), name="product_detail"),
+    path("search/", SearchView.as_view(), name="search"),
 ]
