@@ -1,0 +1,135 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}
+    {% if current_category_obj %}
+        {{ current_category_obj.name }} –
+    {% elif current_category %}
+        {% for c in categories %}
+            {% if c.slug == current_category %}{{ c.name }} –{% endif %}
+        {% endfor %}
+    {% endif %}
+    Catalog — Modern Shop
+{% endblock %}
+{% block content %}
+    <!-- Toolbar / Heading -->
+    <section class="mb-6">
+        <div class="flex items-center justify-between gap-3">
+            <div>
+                {% if current_category_obj %}
+                    <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">{{ current_category_obj.name }}</h1>
+                {% elif current_category %}
+                    {% for c in categories %}
+                        {% if c.slug == current_category %}
+                            <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">{{ c.name }}</h1>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">All Products</h1>
+                {% endif %}
+                <p class="mt-1 muted">{{ products|length }} item{{ products|length|pluralize }}</p>
+            </div>
+            {# Filters button (opens filter modal via HTMX) #}
+            {% with qp=request.GET.urlencode %}
+                <button class="px-4 py-2 rounded-xl border card hover:shadow-soft transition"
+                        hx-get="{{ request.path }}?{% if qp %}{{ qp }}&{% endif %}show_filter=true"
+                        hx-target="#modal"
+                        hx-swap="innerHTML"
+                        aria-controls="modal"
+                        aria-expanded="true">Filters</button>
+            {% endwith %}
+        </div>
+        {# Active filter chips #}
+        {% if filter_params.color or filter_params.size or filter_params.min_price or filter_params.max_price or filter_params.q %}
+            <div class="mt-4 flex flex-wrap items-center gap-2">
+                <span class="text-sm muted">Active:</span>
+                {# თითოეული ჩიფი ხსნის მხოლოდ იმ ერთ პარამეტრს #}
+                {% for key, val in filter_params.items %}
+                    {% if val %}
+                        <form method="get" action="{{ request.path }}" class="inline">
+                            {% for k, v in filter_params.items %}
+                                {% if v and k != key %}<input type="hidden" name="{{ k }}" value="{{ v }}">{% endif %}
+                            {% endfor %}
+                            <button type="submit"
+                                    class="text-sm inline-flex items-center gap-2 px-3 py-1.5 rounded-full border card hover:shadow-soft transition"
+                                    title="Remove {{ key }}">
+                                <span class="font-medium capitalize">{{ key|cut:"_" }}:</span>
+                                <span class="opacity-80">{{ val }}</span>
+                                <svg xmlns="http://www.w3.org/2000/svg"
+                                     class="w-4 h-4 opacity-70"
+                                     viewBox="0 0 24 24"
+                                     fill="currentColor">
+                                    <path d="M18.3 5.71L12 12.01l-6.29-6.3-1.42 1.42L10.59 13.4l-6.3 6.29 1.42 1.42L12 14.83l6.29 6.28 1.42-1.41-6.3-6.29 6.3-6.29z" />
+                                </svg>
+                            </button>
+                        </form>
+                    {% endif %}
+                {% endfor %}
+                <a href="{{ request.path }}" class="text-sm underline ml-1">Clear all</a>
+            </div>
+        {% endif %}
+    </section>
+    <!-- Products grid -->
+    <section aria-label="Products">
+        {% if products %}
+            <ul class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+                {% for p in products %}
+                    <li class="group rounded-2xl border card overflow-hidden hover:shadow-soft transition">
+                        <a href="{% url 'core:product_detail' p.slug %}" class="block">
+                            <!-- Image -->
+                            <div class="relative aspect-square overflow-hidden">
+                                {% if p.main_image %}
+                                    <img src="{{ p.main_image.url }}"
+                                         alt="{{ p.name }}"
+                                         class="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                                         loading="lazy">
+                                {% else %}
+                                    <div class="w-full h-full grid place-items-center muted">
+                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                             class="w-10 h-10 opacity-50"
+                                             viewBox="0 0 24 24"
+                                             fill="currentColor">
+                                            <path d="M21 19V5a2 2 0 0 0-2-2H5C3.9 3 3 3.9 3 5v14a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01 3.5-4.51L19 18H5l3.5-4.5zM9 8a2 2 0 1 1-.001 3.999A2 2 0 0 1 9 8z" />
+                                        </svg>
+                                    </div>
+                                {% endif %}
+                                {% if p.is_new %}
+                                    <span class="absolute left-2 top-2 text-xs px-2 py-1 rounded-full"
+                                          style="background: var(--accent);
+                                                 color: #fff">New</span>
+                                {% endif %}
+                                {% if p.discount_percent %}
+                                    <span class="absolute right-2 top-2 text-xs px-2 py-1 rounded-full border card">-{{ p.discount_percent }}%</span>
+                                {% endif %}
+                            </div>
+                            <!-- Info -->
+                            <div class="p-4">
+                                <h3 class="font-medium truncate">{{ p.name }}</h3>
+                                <div class="mt-1 flex items-center justify-between">
+                                    <div class="font-semibold">
+                                        {% if p.old_price %}<span class="muted line-through mr-2">{{ p.old_price }}</span>{% endif %}
+                                        <span>{{ p.price }}</span>
+                                    </div>
+                                    {% if p.color %}
+                                        <span class="inline-flex items-center gap-2 text-sm muted">
+                                            <span class="w-3 h-3 rounded-full inline-block"
+                                                  style="background-color: {{ p.color }};
+                                                         border: 1px solid rgba(0,0,0,.1)"></span>
+                                            {{ p.color }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="rounded-2xl border card p-12 text-center">
+                <p class="muted">No products match these filters.</p>
+                <a href="{{ request.path }}" class="inline-block mt-3 underline">Reset filters</a>
+            </div>
+        {% endif %}
+    </section>
+    <!-- Modal target (for Filters via HTMX) -->
+    <div id="modal"></div>
+{% endblock %}

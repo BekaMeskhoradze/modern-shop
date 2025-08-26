@@ -1,0 +1,153 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}
+    {% if current_category_obj %}{{ current_category_obj.name }} —{% endif %}
+    Catalog — Modern Shop
+{% endblock %}
+{% block content %}
+    <section class="mb-6 flex items-end justify-between gap-4">
+        <div>
+            <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">
+                {% if current_category_obj %}
+                    {{ current_category_obj.name }}
+                {% else %}
+                    All Products
+                {% endif %}
+            </h1>
+            <p class="muted mt-1">
+                {% if products %}
+                    {{ products|length }} item
+                    {% if products|length != 1 %}s{% endif %}
+                {% else %}
+                    0 items
+                {% endif %}
+            </p>
+        </div>
+        <!-- Quick open on small screens -->
+        <details class="md:hidden">
+            <summary class="cursor-pointer inline-flex items-center gap-2 px-3 py-2 rounded-xl border card">Filters</summary>
+        </details>
+    </section>
+    <!-- Filters -->
+    <section class="rounded-2xl surface border p-4 md:p-6 mb-8">
+        <form action="{% url 'core:catalog_all' %}"
+              method="get"
+              class="grid grid-cols-1 md:grid-cols-5 gap-3 md:gap-4">
+            <!-- Category -->
+            <label class="block">
+                <span class="text-sm font-medium">Category</span>
+                <select name="category"
+                        class="mt-1 w-full px-3 py-2.5 rounded-xl border card">
+                    <option value="">All</option>
+                    {% for c in categories %}
+                        <option value="{{ c.slug }}"
+                                {% if filter_params.category == c.slug or current_category == c.slug %}selected{% endif %}>
+                            {{ c.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </label>
+            <!-- Product name -->
+            <label class="block">
+                <span class="text-sm font-medium">Product name</span>
+                <input type="text"
+                       name="name"
+                       value="{{ filter_params.name|default:'' }}"
+                       placeholder="e.g. Jacket"
+                       class="mt-1 w-full px-3 py-2.5 rounded-xl border card" />
+            </label>
+            <!-- Min price -->
+            <label class="block">
+                <span class="text-sm font-medium">Min price</span>
+                <input type="number"
+                       name="min_price"
+                       min="0"
+                       step="1"
+                       value="{{ filter_params.min_price|default:'' }}"
+                       placeholder="0"
+                       class="mt-1 w-full px-3 py-2.5 rounded-xl border card" />
+            </label>
+            <!-- Max price -->
+            <label class="block">
+                <span class="text-sm font-medium">Max price</span>
+                <input type="number"
+                       name="max_price"
+                       min="0"
+                       step="1"
+                       value="{{ filter_params.max_price|default:'' }}"
+                       placeholder="999"
+                       class="mt-1 w-full px-3 py-2.5 rounded-xl border card" />
+            </label>
+            <!-- Actions -->
+            <div class="flex md:items-end gap-2">
+                <button type="submit"
+                        class="brand-btn px-4 py-2.5 rounded-xl hover:opacity-90 transition w-full md:w-auto">
+                    Apply filters
+                </button>
+                <a href="{% url 'core:catalog_all' %}"
+                   class="px-4 py-2.5 rounded-xl border card hover:shadow-soft transition w-full md:w-auto text-center">
+                    Reset
+                </a>
+            </div>
+        </form>
+        <!-- Active filters chips -->
+        {% if filter_params.name or filter_params.min_price or filter_params.max_price or filter_params.category %}
+            <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+                <span class="muted">Active:</span>
+                {% if filter_params.category %}
+                    <span class="chip px-2.5 py-1 rounded-full border card">Category: {{ current_category_obj.name }}</span>
+                {% endif %}
+                {% if filter_params.name %}
+                    <span class="chip px-2.5 py-1 rounded-full border card">Name: “{{ filter_params.name }}”</span>
+                {% endif %}
+                {% if filter_params.min_price %}
+                    <span class="chip px-2.5 py-1 rounded-full border card">Min: {{ filter_params.min_price }}</span>
+                {% endif %}
+                {% if filter_params.max_price %}
+                    <span class="chip px-2.5 py-1 rounded-full border card">Max: {{ filter_params.max_price }}</span>
+                {% endif %}
+            </div>
+        {% endif %}
+    </section>
+    <!-- Results -->
+    {% if products %}
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {% for product in products %}
+                <a href="{{ product.get_absolute_url }}"
+                   class="group rounded-2xl border card p-3 hover:shadow-soft transition">
+                    <div class="relative rounded-xl overflow-hidden border"
+                         style="border-color: var(--line)">
+                        <div class="relative pt-[100%] bg-[rgba(0,0,0,.04)] dark:bg-[rgba(255,255,255,.05)]">
+                            {% if product.main_image %}
+                                <img src="{{ product.main_image.url }}"
+                                     alt="{{ product.name }}"
+                                     class="absolute inset-0 w-full h-full object-cover"
+                                     width="600"
+                                     height="600"
+                                     loading="lazy"
+                                     decoding="async">
+                            {% else %}
+                                <div class="absolute inset-0 grid place-items-center text-xs muted">No image</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="pt-3 space-y-1">
+                        <h3 class="font-medium line-clamp-2">{{ product.name }}</h3>
+                        <div class="flex items-baseline gap-2">
+                            {% if product.discount_price %}
+                                <span class="font-semibold">{{ product.discount_price }}</span>
+                                <s class="text-sm muted">{{ product.price }}</s>
+                            {% else %}
+                                <span class="font-semibold">{{ product.price }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="rounded-2xl border card p-12 text-center">
+            <p class="muted">No products match your filters.</p>
+        </div>
+    {% endif %}
+{% endblock %}

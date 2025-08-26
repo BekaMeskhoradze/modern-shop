@@ -1,0 +1,418 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="{% static 'favicon.ico' %}">
+    <title>
+      {% block title %}Modern Shop{% endblock %}
+    </title>
+    <!-- Tailwind (CDN) -->
+    <script>
+      window.tailwind = window.tailwind || {};
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Inter", "ui-sans-serif", "system-ui"],
+              display: ["Inter", "ui-sans-serif", "system-ui"],
+            },
+            boxShadow: { soft: "0 10px 30px rgba(0,0,0,.08)" },
+          },
+        },
+      };
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+    <!-- Google Font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+          rel="stylesheet" />
+    <!-- THEME VARIABLES + LIGHTWEIGHT TRANSITIONS -->
+    <style>
+      /* ---------- Design tokens ---------- */
+      :root {
+        --page-bg: #f7f7f8;
+        --surface: #ffffff;
+        --card: #ffffff;
+        --line: rgba(2, 6, 23, 0.1);
+        --text-1: #0f172a;
+        --text-2: #6b7280;
+        --brand: #0f172a;
+        --accent: #f59e0b;
+      }
+      .dark {
+        --page-bg: #0b1220;
+        --surface: #0f172a;
+        --card: #111827;
+        --line: rgba(255, 255, 255, 0.12);
+        --text-1: #e5e7eb;
+        --text-2: #94a3b8;
+        --brand: #0f172a;
+        --accent: #f59e0b;
+      }
+
+      html, body { height: 100%; }
+      body {
+        background-color: var(--page-bg);
+        color: var(--text-1);
+        font-family: Inter, ui-sans-serif, system-ui;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      .surface { background-color: var(--surface); border-color: var(--line); }
+      .card { background-color: var(--card); border-color: var(--line); }
+      .muted { color: var(--text-2); }
+      .brand-btn { background-color: var(--brand); color: #fff; }
+      .accent { color: var(--accent); }
+
+      /* ---------- Smooth theme transitions (optimized) ---------- */
+      .theme-smooth *, .theme-smooth *::before, .theme-smooth *::after { transition: none; }
+      .theme-smooth :where(
+        header, footer, nav, main, .surface, .card, .brand-btn, button, a,
+        input, select, textarea, .chip, .badge
+      ) {
+        transition: background-color .28s ease, color .28s ease,
+                    border-color .28s ease, box-shadow .28s ease;
+      }
+      .theme-smooth :where(img, video, canvas, svg) { transition: none !important; }
+
+      /* Dotted pattern crossfade */
+      .pattern-layer {
+        position: fixed; inset: 0; pointer-events: none;
+        background-size: 18px 18px; transition: opacity .28s ease; will-change: opacity;
+      }
+      .pattern-light {
+        background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,.05) 1px, transparent 0);
+        opacity: 1;
+      }
+      .pattern-dark {
+        background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.06) 1px, transparent 0);
+        opacity: 0;
+      }
+      .dark .pattern-light { opacity: 0; }
+      .dark .pattern-dark { opacity: 1; }
+
+      @media (prefers-reduced-motion: reduce) {
+        .theme-smooth :where(
+          header, footer, nav, main, .surface, .card, .brand-btn, button, a,
+          input, select, textarea, .chip, .badge
+        ) { transition: none !important; }
+        .pattern-layer { transition: none !important; }
+      }
+    </style>
+    <!-- Initial theme (persisted + OS) -->
+    <script>
+      (function () {
+        const ls = localStorage.getItem("theme");
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        if (ls === "dark" || (!ls && prefersDark)) {
+          document.documentElement.classList.add("dark");
+        } else {
+          document.documentElement.classList.remove("dark");
+        }
+      })();
+
+      // UX: focus search after HTMX swaps
+      document.addEventListener("htmx:afterSwap", () => {
+        const input = document.querySelector('input[name="q"]');
+        if (input) input.focus();
+      });
+    </script>
+  </head>
+  <body class="min-h-screen antialiased"
+        hx-boost="true"
+        hx-target="#content"
+        hx-select="#content"
+        hx-push-url="true">
+    <!-- Base BG + crossfading dotted overlay -->
+    <div class="fixed inset-0 -z-10" style="background-color: var(--page-bg)"></div>
+    <div class="pattern-layer pattern-light -z-10"></div>
+    <div class="pattern-layer pattern-dark -z-10"></div>
+    <!-- Header -->
+    <header class="sticky top-0 z-50 surface border-b">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="h-16 flex items-center justify-between gap-3">
+          <!-- Brand -->
+          <a href="{% url 'core:index' %}" class="inline-flex items-center gap-2">
+            <div class="w-9 h-9 rounded-full brand-btn grid place-items-center shadow-soft">
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   class="w-4 h-4"
+                   viewBox="0 0 24 24"
+                   fill="currentColor">
+                <path d="M12 3l8 5v8l-8 5-8-5V8l8-5zM8 10.2v3.6L12 16l4-2.2v-3.6L12 8l-4 2.2z" />
+              </svg>
+            </div>
+            <span class="font-semibold text-xl tracking-tight">
+              Modern <span class="accent">Shop</span>
+            </span>
+          </a>
+          <!-- Search (desktop) -->
+          <form action="{% url 'core:search' %}"
+                method="get"
+                class="hidden md:flex items-center gap-2 flex-1 max-w-2xl mx-4">
+            <div class="relative w-full">
+              <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 opacity-60">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="w-5 h-5"
+                     viewBox="0 0 24 24"
+                     fill="currentColor">
+                  <path d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 1016 9.5c0 1.61-.59 3.09-1.57 4.23l.27.27h.79L20 18.5 18.5 20l-3-3zM5 9.5C5 7.01 7.01 5 9.5 5S14 7.01 14 9.5 11.99 14 9.5 14 5 11.99 5 9.5z" />
+                </svg>
+              </span>
+              <input type="text"
+                     name="q"
+                     value="{{ search_query|default:'' }}"
+                     placeholder="Search clothing, shoes, accessories…"
+                     class="w-full pl-10 pr-3 py-2.5 rounded-xl border card focus:outline-none focus:ring-2"
+                     style="--tw-ring-color: rgba(245, 158, 11, 0.25)" />
+            </div>
+            <button type="submit"
+                    class="px-4 py-2.5 rounded-xl brand-btn hover:opacity-90 transition">Search</button>
+          </form>
+          <!-- Actions -->
+          <div class="flex items-center gap-2">
+            <a href="/contact/"
+               class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl border card hover:shadow-soft transition">
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   class="w-5 h-5 opacity-80"
+                   viewBox="0 0 24 24"
+                   fill="currentColor">
+                <path d="M20 4H4a2 2 0 00-2 2v.01L12 13l10-6.99V6a2 2 0 00-2-2zm0 4.24l-8 5-8-5V18a2 2 0 002 2h12a2 2 0 002-2V8.24z" />
+              </svg>
+              <span>Contact</span>
+            </a>
+            <a href="/cart/"
+               class="relative inline-flex items-center gap-2 px-3 py-2 rounded-xl border card hover:shadow-soft transition">
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   class="w-5 h-5 opacity-80"
+                   viewBox="0 0 24 24"
+                   fill="currentColor">
+                <path d="M7 18a2 2 0 11.999 4A2 2 0 017 18zm10 0a2 2 0 110 4 2 2 0 010-4zM7.16 14h8.96c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0020.58 5H6.21L5.27 3H2v2h2l3.6 7.59-1.35 2.45c-.47.85.12 1.96.95 1.96H19v-2H7.42l.74-1.33z" />
+              </svg>
+              <span>Cart</span>
+              <span class="absolute -top-1.5 -right-1.5 text-[10px] font-semibold rounded-full px-1.5 py-0.5"
+                    style="background: var(--accent);
+                           color: #fff">{{ cart_count|default:0 }}</span>
+            </a>
+            <!-- Theme toggle -->
+            <button id="themeToggle"
+                    type="button"
+                    class="inline-flex items-center justify-center w-10 h-10 rounded-xl border card hover:shadow-soft transition"
+                    aria-label="Toggle theme">
+              <svg id="sun"
+                   class="w-5 h-5 block dark:hidden"
+                   viewBox="0 0 24 24"
+                   fill="currentColor">
+                <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8L6.76 4.84zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.04 2.46l1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM20 13h3v-2h-3v2zm-8 8h2v-3h-2v3zM4.96 18.54l-1.79 1.8 1.41 1.41 1.8-1.79-1.42-1.42zM17.24 19.16l1.8 1.79 1.41-1.41-1.79-1.8-1.42 1.42zM12 6a6 6 0 100 12A6 6 0 0012 6z" />
+              </svg>
+              <svg id="moon"
+                   class="w-5 h-5 hidden dark:block"
+                   viewBox="0 0 24 24"
+                   fill="currentColor">
+                <path d="M12.22 2a10 10 0 109.78 11.01A8 8 0 0112.22 2z" />
+              </svg>
+            </button>
+            <!-- Mobile search -->
+            <a href="{% url 'core:search' %}"
+               class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl border card"
+               aria-label="Search">🔎</a>
+          </div>
+        </div>
+      </div>
+      <!-- Categories nav -->
+      <nav class="border-t" style="border-color: var(--line)">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
+          <a href="{% url 'core:catalog_all' %}"
+             class="px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition border"
+             style="background: {% if not current_category %}var(--brand){% else %}var(--card){% endif %};
+                    color: {% if not current_category %}#fff{% else %}var(--text-1){% endif %};
+                    border-color: var(--line)">All</a>
+          {% for category in categories %}
+            <a href="{% url 'core:catalog_category' category.slug %}"
+               class="px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition border"
+               style="background: {% if current_category == category.slug %}var(--brand){% else %}var(--card){% endif %};
+                      color: {% if current_category == category.slug %}#fff{% else %}var(--text-1){% endif %};
+                      border-color: var(--line)">{{ category.name }}</a>
+          {% endfor %}
+        </div>
+      </nav>
+    </header>
+    <!-- Main -->
+    <main id="content" class="max-w-7xl mx-auto px-4 py-10">
+      {% block content %}
+        <!-- Default landing: categories grid -->
+        <section aria-labelledby="categories-title">
+          <header class="mb-8 text-center">
+            <h1 id="categories-title"
+                class="text-2xl md:text-3xl font-semibold tracking-tight">Shop by Category</h1>
+            <p class="mt-2 muted">Select a category to browse our collection</p>
+          </header>
+          {% if categories %}
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
+              {% for c in categories %}
+                <a href="{% url 'core:catalog_category' c.slug %}"
+                   class="group rounded-2xl border card p-6 flex items-center justify-between hover:shadow-soft transition">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-lg grid place-items-center"
+                         style="background: rgba(0, 0, 0, 0.05)">
+                      <!-- simple hanger icon -->
+                      <svg xmlns="http://www.w3.org/2000/svg"
+                           class="w-5 h-5 opacity-70"
+                           viewBox="0 0 24 24"
+                           fill="currentColor">
+                        <path d="M12 6a2 2 0 10-2-2H8a4 4 0 118 0c0 1.657-1.343 3-3 3h-.5a1.5 1.5 0 00-.6 2.871L20 14.5V18h-2v-2.382l-6-3.272-6 3.272V18H4v-3.5l7.1-3.87A1.5 1.5 0 0011.5 9H12a2.99 2.99 0 002.828-2H12z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 class="font-medium">{{ c.name }}</h3>
+                    </div>
+                  </div>
+                  <span class="text-xl opacity-40 group-hover:opacity-100 transition">→</span>
+                </a>
+              {% endfor %}
+            </div>
+          {% else %}
+            <div class="rounded-2xl border card p-12 text-center">
+              <p class="muted">No categories yet.</p>
+            </div>
+          {% endif %}
+        </section>
+      {% endblock %}
+    </main>
+    <!-- Footer -->
+    <footer class="mt-14">
+      <div class="max-w-7xl mx-auto px-4">
+        <div class="rounded-2xl border surface p-6">
+          <div class="grid sm:grid-cols-2 md:grid-cols-3 gap-6">
+            <div>
+              <h3 class="font-semibold mb-2">ModernShop</h3>
+              <p class="text-sm muted">Timeless basics, fast delivery, easy returns.</p>
+            </div>
+            <div>
+              <h4 class="font-semibold mb-2">Menu</h4>
+              <ul class="space-y-1 text-sm">
+                <li>
+                  <a href="{% url 'core:index' %}" class="hover:underline">Home</a>
+                </li>
+                <li>
+                  <a href="{% url 'core:catalog_all' %}" class="hover:underline">Catalog</a>
+                </li>
+                <li>
+                  <a href="/contact/" class="hover:underline">Contact</a>
+                </li>
+                <li>
+                  <a href="/cart/" class="hover:underline">Cart</a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 class="font-semibold mb-2">Contact</h4>
+              <p class="text-sm muted">support@modernshop.ge</p>
+            </div>
+          </div>
+          <div class="mt-6 pt-4 text-sm muted flex items-center justify-between border-t"
+               style="border-color: var(--line)">
+            <span>&copy; {% now "Y" %} ModernShop. All rights reserved.</span>
+            <span>Made with ❤️</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <!-- Mobile bottom bar -->
+    <nav class="fixed md:hidden bottom-4 left-1/2 -translate-x-1/2 z-40">
+      <div class="flex items-center gap-2 rounded-2xl border surface shadow-soft px-3 py-2">
+        <a href="{% url 'core:index' %}"
+           class="p-2 rounded-xl hover:shadow-soft transition"
+           aria-label="Home">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="w-6 h-6 opacity-80"
+               viewBox="0 0 24 24"
+               fill="currentColor">
+            <path d="M12 3l9 8h-3v9H6v-9H3l9-8z" />
+          </svg>
+        </a>
+        <a href="{% url 'core:catalog_all' %}"
+           class="p-2 rounded-xl hover:shadow-soft transition"
+           aria-label="Catalog">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="w-6 h-6 opacity-80"
+               viewBox="0 0 24 24"
+               fill="currentColor">
+            <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z" />
+          </svg>
+        </a>
+        <a href="/cart/"
+           class="relative p-2 rounded-xl hover:shadow-soft transition"
+           aria-label="Cart">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="w-6 h-6 opacity-80"
+               viewBox="0 0 24 24"
+               fill="currentColor">
+            <path d="M7 18a2 2 0 11.001 3.999A2 2 0 017 18zm10 0a2 2 0 11.001 3.999A2 2 0 0117 18zM7.16 14h8.96c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0020.58 5H6.21l-.94-2H2v2h2l3.6 7.59-1.35 2.45C5.89 16.37 6.48 17 7.21 17H19v-2H7.42l.74-1.33z" />
+          </svg>
+          <span class="absolute -top-1 -right-1 text-[10px] font-semibold rounded-full px-1 py-0.5"
+                style="background: var(--accent);
+                       color: #fff">{{ cart_count|default:0 }}</span>
+        </a>
+        <a href="{% url 'core:search' %}"
+           class="p-2 rounded-xl hover:shadow-soft transition"
+           aria-label="Search">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="w-6 h-6 opacity-80"
+               viewBox="0 0 24 24"
+               fill="currentColor">
+            <path d="M15.5 14h-.79l-.28-.27A6.5 6.5 0 1016 9.5c0 1.61-.59 3.09-1.57 4.23l.27.27h.79L20 18.5 18.5 20l-3-3zM5 9.5C5 7.01 7.01 5 9.5 5S14 7.01 14 9.5 11.99 14 9.5 14 5 11.99 5 9.5z" />
+          </svg>
+        </a>
+        <button id="themeToggleMobile"
+                class="p-2 rounded-xl hover:shadow-soft transition"
+                aria-label="Toggle theme">
+          <svg class="w-6 h-6 block dark:hidden"
+               viewBox="0 0 24 24"
+               fill="currentColor">
+            <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.04 2.46l1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM20 13h3v-2h-3v2zm-8 8h2v-3h-2v3zM4.96 18.54ლ-1.79 1.8 1.41 1.41 1.8-1.79-1.42-1.42zM17.24 19.16l1.8 1.79 1.41-1.41-1.79-1.8-1.42 1.42zM12 6a6 6 0 100 12A6 6 0 0012 6z" />
+          </svg>
+          <svg class="w-6 h-6 hidden dark:block"
+               viewBox="0 0 24 24"
+               fill="currentColor">
+            <path d="M12.22 2a10 10 0 109.78 11.01A8 8 0 0112.22 2z" />
+          </svg>
+        </button>
+      </div>
+    </nav>
+    <!-- Smooth theme JS (debounced & minimal) -->
+    <script>
+      function applyTheme(isDark) {
+        const root = document.documentElement;
+        root.classList.toggle("dark", isDark);
+        localStorage.setItem("theme", isDark ? "dark" : "light");
+      }
+
+      let isTogglingTheme = false;
+      function toggleTheme() {
+        if (isTogglingTheme) return; // debounce rapid clicks
+        isTogglingTheme = true;
+
+        const root = document.documentElement;
+        root.classList.add("theme-smooth");
+
+        const toDark = !root.classList.contains("dark");
+        applyTheme(toDark);
+
+        // remove smooth flag after transition
+        setTimeout(() => {
+          root.classList.remove("theme-smooth");
+          isTogglingTheme = false;
+        }, 320);
+      }
+
+      document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
+      document.getElementById("themeToggleMobile")?.addEventListener("click", toggleTheme);
+    </script>
+  </body>
+</html>
