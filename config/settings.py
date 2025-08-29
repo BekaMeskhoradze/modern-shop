@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+from django.conf.global_settings import SESSION_COOKIE_AGE, SESSION_SAVE_EVERY_REQUEST
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -44,7 +45,7 @@ INSTALLED_APPS = [
 
     #local apps
     'core',
-    
+    'cart',
 ]
 
 MIDDLEWARE = [
@@ -55,6 +56,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # Custom middleware
+    'cart.middleware.CartMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -69,6 +72,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                #  Custom context processors
+                'cart.context_processors.cart_processor',
             ],
         },
     },
@@ -137,3 +142,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SESSION_COOKIE_AGE = 86400  # 30 days
+SESSION_SAVE_EVERY_REQUEST = True
+
+

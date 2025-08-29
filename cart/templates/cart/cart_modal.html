@@ -1,0 +1,34 @@
+{% load static %}
+<div id="cart-modal">
+    {% if error_message %}<div class="mb-3 rounded-xl border p-3 text-red-600">⚠ {{ error_message }}</div>{% endif %}
+    {% if cart.total_items %}
+        <div class="space-y-4">
+            {% for item in items %}
+                {% include "cart/cart_item.html" with item=item %}
+            {% endfor %}
+        </div>
+        <div class="mt-4 flex items-center justify-between">
+            <div class="text-lg">
+                <span class="muted">Subtotal</span>
+                <span class="font-semibold">{{ cart.subtotal|floatformat:2 }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <form method="post"
+                      hx-post="{% url 'cart:clear' %}"
+                      hx-target="#cart-modal"
+                      hx-swap="outerHTML"
+                      hx-select="#cart-modal"
+                      hx-sync="#cart-modal:queue"
+                      hx-disabled-elt="button">
+                    {% csrf_token %}
+                    <button type="submit" class="px-4 py-2 rounded-xl border card">Clear cart</button>
+                </form>
+                <a href="{% url 'cart:summary' %}"
+                   class="px-4 py-2 rounded-xl brand-btn"
+                   onclick="closeCartModal()">View cart</a>
+            </div>
+        </div>
+    {% else %}
+        {% include "cart/cart_empty.html" %}
+    {% endif %}
+</div>

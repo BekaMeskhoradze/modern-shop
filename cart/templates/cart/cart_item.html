@@ -1,0 +1,70 @@
+{# cart/templates/cart/cart_item.html #}
+<div class="flex gap-3 items-center rounded-xl border card p-3">
+    <!-- Image -->
+    <a href="{% url 'core:product_detail' item.product.slug %}"
+       class="shrink-0">
+        {% if item.product.main_image %}
+            <img src="{{ item.product.main_image.url }}"
+                 alt="{{ item.product.name }}"
+                 class="w-14 h-14 rounded-lg object-cover border"
+                 style="border-color:var(--line)">
+        {% else %}
+            <div class="w-14 h-14 rounded-lg grid place-items-center text-[11px] bg-gray-100 dark:bg-gray-900">No image</div>
+        {% endif %}
+    </a>
+    <!-- Info -->
+    <div class="flex-1 min-w-0">
+        <a href="{% url 'core:product_detail' item.product.slug %}"
+           class="font-medium line-clamp-1 hover:underline">{{ item.product.name }}</a>
+        <div class="text-sm muted mt-0.5">
+            {% if item.product_size %}Size: {{ item.product_size.size.name }} ·{% endif %}
+            Price: {{ item.product.price|floatformat:2 }}
+        </div>
+        <!-- Qty controls -->
+        <div class="mt-2 inline-flex items-center gap-2">
+            <!-- − -->
+            <form method="post"
+                  hx-post="{% url 'cart:update_item' item.id %}"
+                  hx-target="#cart-modal"
+                  hx-swap="outerHTML"
+                  hx-select="#cart-modal"
+                  hx-sync="#cart-modal:queue"
+                  hx-disabled-elt="button">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="dec">
+                <button type="submit"
+                        class="w-8 h-8 rounded-lg border card"
+                        aria-label="Decrease">−</button>
+            </form>
+            <span class="min-w-[2ch] text-center">{{ item.quantity }}</span>
+            <!-- + -->
+            <form method="post"
+                  hx-post="{% url 'cart:update_item' item.id %}"
+                  hx-target="#cart-modal"
+                  hx-swap="outerHTML"
+                  hx-select="#cart-modal"
+                  hx-sync="#cart-modal:queue"
+                  hx-disabled-elt="button">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="inc">
+                <button type="submit"
+                        class="w-8 h-8 rounded-lg border card"
+                        aria-label="Increase">+</button>
+            </form>
+            <!-- Remove -->
+            <form method="post"
+                  class="ml-3"
+                  hx-post="{% url 'cart:remove_item' item.id %}"
+                  hx-target="#cart-modal"
+                  hx-swap="outerHTML"
+                  hx-select="#cart-modal"
+                  hx-sync="#cart-modal:queue"
+                  hx-disabled-elt="button">
+                {% csrf_token %}
+                <button type="submit" class="text-red-600 hover:underline">Remove</button>
+            </form>
+        </div>
+    </div>
+    <!-- Line total -->
+    <div class="font-semibold">{{ item.total_price|floatformat:2 }}</div>
+</div>

@@ -9,17 +9,14 @@
     <title>
       {% block title %}Modern Shop{% endblock %}
     </title>
-    <!-- Tailwind (CDN) -->
+    <!-- Tailwind (config + CDN) -->
     <script>
       window.tailwind = window.tailwind || {};
       tailwind.config = {
         darkMode: "class",
         theme: {
           extend: {
-            fontFamily: {
-              sans: ["Inter", "ui-sans-serif", "system-ui"],
-              display: ["Inter", "ui-sans-serif", "system-ui"],
-            },
+            fontFamily: { sans: ["Inter","ui-sans-serif","system-ui"], display: ["Inter","ui-sans-serif","system-ui"] },
             boxShadow: { soft: "0 10px 30px rgba(0,0,0,.08)" },
           },
         },
@@ -34,93 +31,47 @@
           rel="stylesheet" />
     <!-- THEME VARIABLES + LIGHTWEIGHT TRANSITIONS -->
     <style>
-      /* ---------- Design tokens ---------- */
       :root {
-        --page-bg: #f7f7f8;
-        --surface: #ffffff;
-        --card: #ffffff;
-        --line: rgba(2, 6, 23, 0.1);
-        --text-1: #0f172a;
-        --text-2: #6b7280;
-        --brand: #0f172a;
-        --accent: #f59e0b;
+        --page-bg:#f7f7f8; --surface:#fff; --card:#fff; --line:rgba(2,6,23,.1);
+        --text-1:#0f172a; --text-2:#6b7280; --brand:#0f172a; --accent:#f59e0b;
       }
       .dark {
-        --page-bg: #0b1220;
-        --surface: #0f172a;
-        --card: #111827;
-        --line: rgba(255, 255, 255, 0.12);
-        --text-1: #e5e7eb;
-        --text-2: #94a3b8;
-        --brand: #0f172a;
-        --accent: #f59e0b;
+        --page-bg:#0b1220; --surface:#0f172a; --card:#111827; --line:rgba(255,255,255,.12);
+        --text-1:#e5e7eb; --text-2:#94a3b8; --brand:#0f172a; --accent:#f59e0b;
       }
-
-      html, body { height: 100%; }
-      body {
-        background-color: var(--page-bg);
-        color: var(--text-1);
-        font-family: Inter, ui-sans-serif, system-ui;
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
+      html,body{height:100%}
+      body{background:var(--page-bg);color:var(--text-1);font-family:Inter,ui-sans-serif,system-ui;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+      .surface{background:var(--surface);border-color:var(--line)}
+      .card{background:var(--card);border-color:var(--line)}
+      .muted{color:var(--text-2)} .brand-btn{background:var(--brand);color:#fff} .accent{color:var(--accent)}
+      .theme-smooth *, .theme-smooth *::before, .theme-smooth *::after{transition:none}
+      .theme-smooth :where(header,footer,nav,main,.surface,.card,.brand-btn,button,a,input,select,textarea,.chip,.badge){
+        transition:background-color .28s ease,color .28s ease,border-color .28s ease,box-shadow .28s ease;
       }
-      .surface { background-color: var(--surface); border-color: var(--line); }
-      .card { background-color: var(--card); border-color: var(--line); }
-      .muted { color: var(--text-2); }
-      .brand-btn { background-color: var(--brand); color: #fff; }
-      .accent { color: var(--accent); }
-
-      /* ---------- Smooth theme transitions (optimized) ---------- */
-      .theme-smooth *, .theme-smooth *::before, .theme-smooth *::after { transition: none; }
-      .theme-smooth :where(
-        header, footer, nav, main, .surface, .card, .brand-btn, button, a,
-        input, select, textarea, .chip, .badge
-      ) {
-        transition: background-color .28s ease, color .28s ease,
-                    border-color .28s ease, box-shadow .28s ease;
-      }
-      .theme-smooth :where(img, video, canvas, svg) { transition: none !important; }
-
-      /* Dotted pattern crossfade */
-      .pattern-layer {
-        position: fixed; inset: 0; pointer-events: none;
-        background-size: 18px 18px; transition: opacity .28s ease; will-change: opacity;
-      }
-      .pattern-light {
-        background-image: radial-gradient(circle at 1px 1px, rgba(0,0,0,.05) 1px, transparent 0);
-        opacity: 1;
-      }
-      .pattern-dark {
-        background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,.06) 1px, transparent 0);
-        opacity: 0;
-      }
-      .dark .pattern-light { opacity: 0; }
-      .dark .pattern-dark { opacity: 1; }
-
-      @media (prefers-reduced-motion: reduce) {
-        .theme-smooth :where(
-          header, footer, nav, main, .surface, .card, .brand-btn, button, a,
-          input, select, textarea, .chip, .badge
-        ) { transition: none !important; }
-        .pattern-layer { transition: none !important; }
-      }
+      .pattern-layer{position:fixed;inset:0;pointer-events:none;background-size:18px 18px;transition:opacity .28s ease;will-change:opacity}
+      .pattern-light{background-image:radial-gradient(circle at 1px 1px, rgba(0,0,0,.05) 1px, transparent 0);opacity:1}
+      .pattern-dark{background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.06) 1px, transparent 0);opacity:0}
+      .dark .pattern-light{opacity:0} .dark .pattern-dark{opacity:1}
     </style>
-    <!-- Initial theme (persisted + OS) -->
+    <!-- Initial theme + HTMX CSRF -->
     <script>
-      (function () {
+      (function(){
         const ls = localStorage.getItem("theme");
         const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-        if (ls === "dark" || (!ls && prefersDark)) {
-          document.documentElement.classList.add("dark");
-        } else {
-          document.documentElement.classList.remove("dark");
-        }
+        if (ls==="dark" || (!ls && prefersDark)) document.documentElement.classList.add("dark");
       })();
 
-      // UX: focus search after HTMX swaps
+      // focus search after swaps
       document.addEventListener("htmx:afterSwap", () => {
-        const input = document.querySelector('input[name="q"]');
-        if (input) input.focus();
+        const input = document.querySelector('input[name="q"]'); if (input) input.focus();
+      });
+
+      // CSRF header for HTMX
+      function getCookie(name){
+        const value=`; ${document.cookie}`; const parts=value.split(`; ${name}=`); if(parts.length===2) return parts.pop().split(";").shift();
+      }
+      document.addEventListener("htmx:configRequest", (e) => {
+        const token=getCookie("csrftoken"); if (token) e.detail.headers["X-CSRFToken"]=token;
       });
     </script>
   </head>
@@ -129,7 +80,7 @@
         hx-target="#content"
         hx-select="#content"
         hx-push-url="true">
-    <!-- Base BG + crossfading dotted overlay -->
+    <!-- BG + pattern -->
     <div class="fixed inset-0 -z-10" style="background-color: var(--page-bg)"></div>
     <div class="pattern-layer pattern-light -z-10"></div>
     <div class="pattern-layer pattern-dark -z-10"></div>
@@ -147,9 +98,7 @@
                 <path d="M12 3l8 5v8l-8 5-8-5V8l8-5zM8 10.2v3.6L12 16l4-2.2v-3.6L12 8l-4 2.2z" />
               </svg>
             </div>
-            <span class="font-semibold text-xl tracking-tight">
-              Modern <span class="accent">Shop</span>
-            </span>
+            <span class="font-semibold text-xl tracking-tight">Modern <span class="accent">Shop</span></span>
           </a>
           <!-- Search (desktop) -->
           <form action="{% url 'core:search' %}"
@@ -176,29 +125,17 @@
           </form>
           <!-- Actions -->
           <div class="flex items-center gap-2">
-            <a href="/contact/"
+            <a href="{% url 'core:catalog_all' %}"
                class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl border card hover:shadow-soft transition">
               <svg xmlns="http://www.w3.org/2000/svg"
                    class="w-5 h-5 opacity-80"
                    viewBox="0 0 24 24"
                    fill="currentColor">
-                <path d="M20 4H4a2 2 0 00-2 2v.01L12 13l10-6.99V6a2 2 0 00-2-2zm0 4.24l-8 5-8-5V18a2 2 0 002 2h12a2 2 0 002-2V8.24z" />
+                <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.2 0-8 2.1-8 5v1h16v-1c0-2.9-3.8-5-8-5z" />
               </svg>
-              <span>Contact</span>
+              <span>Account</span>
             </a>
-            <a href="/cart/"
-               class="relative inline-flex items-center gap-2 px-3 py-2 rounded-xl border card hover:shadow-soft transition">
-              <svg xmlns="http://www.w3.org/2000/svg"
-                   class="w-5 h-5 opacity-80"
-                   viewBox="0 0 24 24"
-                   fill="currentColor">
-                <path d="M7 18a2 2 0 11.999 4A2 2 0 017 18zm10 0a2 2 0 110 4 2 2 0 010-4zM7.16 14h8.96c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0020.58 5H6.21L5.27 3H2v2h2l3.6 7.59-1.35 2.45c-.47.85.12 1.96.95 1.96H19v-2H7.42l.74-1.33z" />
-              </svg>
-              <span>Cart</span>
-              <span class="absolute -top-1.5 -right-1.5 text-[10px] font-semibold rounded-full px-1.5 py-0.5"
-                    style="background: var(--accent);
-                           color: #fff">{{ cart_count|default:0 }}</span>
-            </a>
+            {% include "cart/includes/cart_button.html" %}
             <!-- Theme toggle -->
             <button id="themeToggle"
                     type="button"
@@ -208,7 +145,7 @@
                    class="w-5 h-5 block dark:hidden"
                    viewBox="0 0 24 24"
                    fill="currentColor">
-                <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8L6.76 4.84zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.04 2.46l1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM20 13h3v-2h-3v2zm-8 8h2v-3h-2v3zM4.96 18.54l-1.79 1.8 1.41 1.41 1.8-1.79-1.42-1.42zM17.24 19.16l1.8 1.79 1.41-1.41-1.79-1.8-1.42 1.42zM12 6a6 6 0 100 12A6 6 0 0012 6z" />
+                <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.04 2.46l1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM20 13h3v-2h-3v2zm-8 8h2v-3h-2v3zM4.96 18.54l-1.79 1.8 1.41 1.41 1.8-1.79-1.42-1.42zM17.24 19.16l1.8 1.79 1.41-1.41-1.79-1.8-1.42 1.42zM12 6a6 6 0 100 12A6 6 0 0012 6z" />
               </svg>
               <svg id="moon"
                    class="w-5 h-5 hidden dark:block"
@@ -229,60 +166,22 @@
         <div class="max-w-7xl mx-auto px-4 py-3 flex gap-2 overflow-x-auto">
           <a href="{% url 'core:catalog_all' %}"
              class="px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition border"
-             style="background: {% if not current_category %}var(--brand){% else %}var(--card){% endif %};
-                    color: {% if not current_category %}#fff{% else %}var(--text-1){% endif %};
-                    border-color: var(--line)">All</a>
+             style="background:{% if not current_category %}var(--brand){% else %}var(--card){% endif %};
+                    color:{% if not current_category %}#fff{% else %}var(--text-1){% endif %};
+                    border-color:var(--line)">All</a>
           {% for category in categories %}
             <a href="{% url 'core:catalog_category' category.slug %}"
                class="px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition border"
-               style="background: {% if current_category == category.slug %}var(--brand){% else %}var(--card){% endif %};
-                      color: {% if current_category == category.slug %}#fff{% else %}var(--text-1){% endif %};
-                      border-color: var(--line)">{{ category.name }}</a>
+               style="background:{% if current_category == category.slug %}var(--brand){% else %}var(--card){% endif %};
+                      color:{% if current_category == category.slug %}#fff{% else %}var(--text-1){% endif %};
+                      border-color:var(--line)">{{ category.name }}</a>
           {% endfor %}
         </div>
       </nav>
     </header>
     <!-- Main -->
     <main id="content" class="max-w-7xl mx-auto px-4 py-10">
-      {% block content %}
-        <!-- Default landing: categories grid -->
-        <section aria-labelledby="categories-title">
-          <header class="mb-8 text-center">
-            <h1 id="categories-title"
-                class="text-2xl md:text-3xl font-semibold tracking-tight">Shop by Category</h1>
-            <p class="mt-2 muted">Select a category to browse our collection</p>
-          </header>
-          {% if categories %}
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
-              {% for c in categories %}
-                <a href="{% url 'core:catalog_category' c.slug %}"
-                   class="group rounded-2xl border card p-6 flex items-center justify-between hover:shadow-soft transition">
-                  <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-lg grid place-items-center"
-                         style="background: rgba(0, 0, 0, 0.05)">
-                      <!-- simple hanger icon -->
-                      <svg xmlns="http://www.w3.org/2000/svg"
-                           class="w-5 h-5 opacity-70"
-                           viewBox="0 0 24 24"
-                           fill="currentColor">
-                        <path d="M12 6a2 2 0 10-2-2H8a4 4 0 118 0c0 1.657-1.343 3-3 3h-.5a1.5 1.5 0 00-.6 2.871L20 14.5V18h-2v-2.382l-6-3.272-6 3.272V18H4v-3.5l7.1-3.87A1.5 1.5 0 0011.5 9H12a2.99 2.99 0 002.828-2H12z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 class="font-medium">{{ c.name }}</h3>
-                    </div>
-                  </div>
-                  <span class="text-xl opacity-40 group-hover:opacity-100 transition">→</span>
-                </a>
-              {% endfor %}
-            </div>
-          {% else %}
-            <div class="rounded-2xl border card p-12 text-center">
-              <p class="muted">No categories yet.</p>
-            </div>
-          {% endif %}
-        </section>
-      {% endblock %}
+      {% block content %}{% endblock %}
     </main>
     <!-- Footer -->
     <footer class="mt-14">
@@ -306,7 +205,14 @@
                   <a href="/contact/" class="hover:underline">Contact</a>
                 </li>
                 <li>
-                  <a href="/cart/" class="hover:underline">Cart</a>
+                  <a href="#"
+                     class="hover:underline"
+                     hx-get="{% url 'cart:cart_modal' %}"
+                     hx-target="#cart-modal"
+                     hx-swap="outerHTML"
+                     hx-select="#cart-modal"
+                     hx-push-url="false"
+                     onclick="openCartModal(); return false;">Cart</a>
                 </li>
               </ul>
             </div>
@@ -346,19 +252,7 @@
             <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z" />
           </svg>
         </a>
-        <a href="/cart/"
-           class="relative p-2 rounded-xl hover:shadow-soft transition"
-           aria-label="Cart">
-          <svg xmlns="http://www.w3.org/2000/svg"
-               class="w-6 h-6 opacity-80"
-               viewBox="0 0 24 24"
-               fill="currentColor">
-            <path d="M7 18a2 2 0 11.001 3.999A2 2 0 017 18zm10 0a2 2 0 11.001 3.999A2 2 0 0117 18zM7.16 14h8.96c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0020.58 5H6.21l-.94-2H2v2h2l3.6 7.59-1.35 2.45C5.89 16.37 6.48 17 7.21 17H19v-2H7.42l.74-1.33z" />
-          </svg>
-          <span class="absolute -top-1 -right-1 text-[10px] font-semibold rounded-full px-1 py-0.5"
-                style="background: var(--accent);
-                       color: #fff">{{ cart_count|default:0 }}</span>
-        </a>
+        {% include "cart/includes/cart_button.html" with variant='mobile' %}
         <a href="{% url 'core:search' %}"
            class="p-2 rounded-xl hover:shadow-soft transition"
            aria-label="Search">
@@ -375,7 +269,7 @@
           <svg class="w-6 h-6 block dark:hidden"
                viewBox="0 0 24 24"
                fill="currentColor">
-            <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.04 2.46l1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM20 13h3v-2h-3v2zm-8 8h2v-3h-2v3zM4.96 18.54ლ-1.79 1.8 1.41 1.41 1.8-1.79-1.42-1.42zM17.24 19.16l1.8 1.79 1.41-1.41-1.79-1.8-1.42 1.42zM12 6a6 6 0 100 12A6 6 0 0012 6z" />
+            <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.04 2.46l1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM20 13h3v-2h-3v2zm-8 8h2v-3h-2v3zM4.96 18.54l-1.79 1.8 1.41 1.41 1.8-1.79-1.42-1.42zM17.24 19.16l1.8 1.79 1.41-1.41-1.79-1.8-1.42 1.42zM12 6a6 6 0 100 12A6 6 0 0012 6z" />
           </svg>
           <svg class="w-6 h-6 hidden dark:block"
                viewBox="0 0 24 24"
@@ -385,34 +279,104 @@
         </button>
       </div>
     </nav>
-    <!-- Smooth theme JS (debounced & minimal) -->
+    <!-- Cart Modal (overlay + sheet) -->
+    <div id="cart-overlay" class="hidden fixed inset-0 z-50">
+      <div class="absolute inset-0 bg-black/30" onclick="closeCartModal()"></div>
+      <div id="cart-sheet"
+           class="absolute inset-x-0 bottom-0 md:inset-y-0 md:right-0 md:left-auto md:w-[440px] rounded-t-2xl md:rounded-l-2xl surface shadow-2xl transform transition-transform duration-150 translate-y-full md:translate-y-0 md:translate-x-0 z-10">
+        <div class="p-4 border-b" style="border-color: var(--line)">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg font-semibold">Your Cart</h2>
+            <button onclick="closeCartModal()"
+                    class="px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                    aria-label="Close">✕</button>
+          </div>
+        </div>
+        <div class="p-4">
+          <div id="cart-modal">{% include "cart/cart_empty.html" %}</div>
+        </div>
+      </div>
+    </div>
+    <!-- Theme + Cart helpers + GLOBAL Filters helper -->
     <script>
-      function applyTheme(isDark) {
-        const root = document.documentElement;
-        root.classList.toggle("dark", isDark);
-        localStorage.setItem("theme", isDark ? "dark" : "light");
+      function applyTheme(isDark){
+        const root=document.documentElement;
+        root.classList.toggle("dark",isDark);
+        localStorage.setItem("theme",isDark?"dark":"light");
       }
-
-      let isTogglingTheme = false;
-      function toggleTheme() {
-        if (isTogglingTheme) return; // debounce rapid clicks
-        isTogglingTheme = true;
-
-        const root = document.documentElement;
+      let isTogglingTheme=false;
+      function toggleTheme(){
+        if(isTogglingTheme) return;
+        isTogglingTheme=true;
+        const root=document.documentElement;
         root.classList.add("theme-smooth");
-
-        const toDark = !root.classList.contains("dark");
+        const toDark=!root.classList.contains("dark");
         applyTheme(toDark);
+        setTimeout(()=>{root.classList.remove("theme-smooth");isTogglingTheme=false;},320);
+      }
+      document.getElementById("themeToggle")?.addEventListener("click",toggleTheme);
+      document.getElementById("themeToggleMobile")?.addEventListener("click",toggleTheme);
 
-        // remove smooth flag after transition
-        setTimeout(() => {
-          root.classList.remove("theme-smooth");
-          isTogglingTheme = false;
-        }, 320);
+      function openCartModal(){
+        const overlay=document.getElementById('cart-overlay');
+        const sheet=document.getElementById('cart-sheet');
+        overlay?.classList.remove('hidden');
+        sheet?.classList.remove('translate-y-full');
+      }
+      function closeCartModal(){
+        const overlay=document.getElementById('cart-overlay');
+        const sheet=document.getElementById('cart-sheet');
+        sheet?.classList.add('translate-y-full');
+        if(overlay) setTimeout(()=>overlay.classList.add('hidden'),150);
       }
 
-      document.getElementById("themeToggle")?.addEventListener("click", toggleTheme);
-      document.getElementById("themeToggleMobile")?.addEventListener("click", toggleTheme);
+      // როცა cart_modal ჩაიტვირთება – გახსენი მოდალი
+      document.addEventListener('htmx:afterSwap', (e) => {
+        if (e.detail.target && e.detail.target.id === 'cart-modal') openCartModal();
+      });
+
+      // Cart badge refresh
+      function refreshCartBadge(){
+        fetch("{% url 'cart:cart_count' %}")
+          .then(r=>r.json())
+          .then(d=>{
+            const ids = ['cart-badge','cart-badge-mobile'];
+            ids.forEach(id => { const el=document.getElementById(id); if(el) el.textContent=d.total_items; });
+            document.querySelectorAll('[data-cart-badge]').forEach(el => el.textContent=d.total_items);
+          })
+          .catch(()=>{});
+      }
+      document.addEventListener('DOMContentLoaded', refreshCartBadge);
+      document.addEventListener('htmx:afterRequest', (e)=>{
+        const url=e.detail?.xhr?.responseURL||'';
+        if (/\/cart\/(add|update|remove|clear)\//.test(url)) refreshCartBadge();
+      });
+
+      document.addEventListener('keydown',(e)=>{ if(e.key==='Escape') closeCartModal(); });
+
+      /* ----------------------------
+         GLOBAL Filters helpers
+      ---------------------------- */
+      function closeFilters(){
+        const modal   = document.getElementById('modal');
+        const sheet   = document.getElementById('filters-sheet');
+        if (sheet) {
+          sheet.classList.add('translate-x-full');
+          setTimeout(() => {
+            document.documentElement.classList.remove('overflow-hidden');
+            if (modal) modal.innerHTML = '';
+          }, 200);
+        } else {
+          document.documentElement.classList.remove('overflow-hidden');
+          if (modal) modal.innerHTML = '';
+        }
+      }
+      // ESC-ით დახურვა (ფილტრები)
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && document.getElementById('filters-sheet')) {
+          closeFilters();
+        }
+      });
     </script>
   </body>
 </html>

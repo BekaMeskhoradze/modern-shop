@@ -1,74 +1,36 @@
 {% extends "core/base.html" %}
 {% load static %}
-{% static 'img/placeholder.svg' as placeholder_img %}
-{% block title %}
-    {% if search_query %}
-        Search: {{ search_query }} — Modern Shop
-    {% else %}
-        Search — Modern Shop
-    {% endif %}
-{% endblock %}
+{% block title %}Search — Modern Shop{% endblock %}
 {% block content %}
-    <section class="mb-8">
-        <h1 class="text-2xl font-semibold tracking-tight">
-            {% if search_query %}
-                Results for “{{ search_query }}”
-            {% else %}
-                Search
-            {% endif %}
-        </h1>
-        <p class="muted mt-1">
-            {% if search_query %}
-                Showing products that match your query.
-            {% else %}
-                Type in the search box above to find products by name or description.
-            {% endif %}
-        </p>
-    </section>
-    {% if products %}
-        <!-- Results grid -->
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {% for product in products %}
-                <a href="{{ product.get_absolute_url }}"
-                   class="group rounded-2xl border card p-3 hover:shadow-soft transition">
+    <header class="mb-6">
+        <h1 class="text-2xl font-semibold tracking-tight">Search results</h1>
+        {% if search_query %}<p class="muted">Query: “{{ search_query }}”</p>{% endif %}
+    </header>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {% for product in products %}
+            <div class="group rounded-2xl border card p-3 hover:shadow-soft transition">
+                <a href="{{ product.get_absolute_url }}" class="block">
                     <div class="relative rounded-xl overflow-hidden border"
                          style="border-color: var(--line)">
                         <div class="relative pt-[100%] bg-[rgba(0,0,0,.04)] dark:bg-[rgba(255,255,255,.05)]">
-                            <img src="{% if product.main_image %}{{ product.main_image.url }}{% else %}{{ placeholder_img }}{% endif %}"
+                            <img src="{% if product.main_image %}{{ product.main_image.url }}{% else %}{% static 'img/placeholder.svg' %}{% endif %}"
                                  alt="{{ product.name }}"
                                  class="absolute inset-0 w-full h-full object-cover"
-                                 width="600"
-                                 height="600"
-                                 loading="lazy"
-                                 decoding="async">
+                                 loading="lazy">
                         </div>
                     </div>
                     <div class="pt-3 space-y-1">
                         <h3 class="font-medium truncate">{{ product.name }}</h3>
-                        <div class="flex items-baseline gap-2">
-                            {% if product.discount_price %}
-                                <span class="font-semibold">{{ product.discount_price }}</span>
-                                <s class="text-sm muted">{{ product.price }}</s>
-                            {% else %}
-                                <span class="font-semibold">{{ product.price }}</span>
-                            {% endif %}
-                        </div>
+                        <div class="font-semibold">{{ product.price }}</div>
                     </div>
                 </a>
-            {% endfor %}
-        </div>
-    {% else %}
-        <!-- Empty state -->
-        <div class="rounded-2xl border card p-12 text-center">
-            {% if search_query %}
-                <p class="muted">No results for “{{ search_query }}”. Try different keywords.</p>
-                <div class="mt-4 flex items-center justify-center gap-2">
-                    <a href="{% url 'core:catalog_all' %}"
-                       class="brand-btn px-4 py-2.5 rounded-xl hover:opacity-90 transition">Go to catalog →</a>
-                </div>
-            {% else %}
-                <p class="muted">Start by entering a search term in the header.</p>
-            {% endif %}
-        </div>
-    {% endif %}
+                <a href="{{ product.get_absolute_url }}"
+                   class="mt-3 block px-3 py-2 rounded-xl border card text-center hover:shadow-soft transition">Choose size →</a>
+            </div>
+        {% empty %}
+            <div class="col-span-full rounded-2xl border card p-12 text-center">
+                <p class="muted">No results.</p>
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}
