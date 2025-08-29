@@ -1,0 +1,100 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Your Cart — Modern Shop{% endblock %}
+{% block content %}
+    <section class="max-w-5xl mx-auto">
+        <h1 class="text-2xl font-semibold mb-4">Your Cart</h1>
+        <div id="cart-summary">
+            {% if cart.total_items %}
+                <div class="space-y-4">
+                    {% for item in items %}
+                        {# თითოეული რიგი უნიკალური id-ით, რომ მხოლოდ ის განახლდეს #}
+                        <div id="cart-item-{{ item.id }}"
+                             class="rounded-2xl border card p-4 flex items-center gap-4">
+                            <img src="{% if item.product.main_image %}{{ item.product.main_image.url }}{% else %}{% static 'img/placeholder.svg' %}{% endif %}"
+                                 alt=""
+                                 class="w-16 h-16 rounded-lg object-cover border"
+                                 style="border-color: var(--line)" />
+                            <div class="flex-1 min-w-0">
+                                <div class="font-medium truncate">{{ item.product.name }}</div>
+                                <div class="text-sm muted mt-0.5">
+                                    {% if item.product_size %}Size: {{ item.product_size.size.name }} ·{% endif %}
+                                    Price: {{ item.product.price }}
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                {# − მხოლოდ ამ რიგის განახლება #}
+                                <form method="post"
+                                      hx-post="{% url 'cart:update_item' item.id %}"
+                                      hx-target="#cart-item-{{ item.id }}"
+                                      hx-select="#cart-item-{{ item.id }}"
+                                      hx-swap="outerHTML"
+                                      hx-sync="#cart-summary:queue"
+                                      hx-disabled-elt="button"
+                                      hx-push-url="false">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="dec">
+                                    <button type="submit" class="w-8 h-8 rounded-lg border card">−</button>
+                                </form>
+                                <span class="min-w-[2ch] text-center">{{ item.quantity }}</span>
+                                {# + მხოლოდ ამ რიგის განახლება #}
+                                <form method="post"
+                                      hx-post="{% url 'cart:update_item' item.id %}"
+                                      hx-target="#cart-item-{{ item.id }}"
+                                      hx-select="#cart-item-{{ item.id }}"
+                                      hx-swap="outerHTML"
+                                      hx-sync="#cart-summary:queue"
+                                      hx-disabled-elt="button"
+                                      hx-push-url="false">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="inc">
+                                    <button type="submit" class="w-8 h-8 rounded-lg border card">+</button>
+                                </form>
+                            </div>
+                            <div class="w-28 text-right font-semibold">{{ item.total_price }}</div>
+                            {# Remove – სრულ სიას აახლებს, მაგრამ innerHTML-ით, რომ wrapper არ გაქრეს #}
+                            <form method="post"
+                                  class="ml-2"
+                                  hx-post="{% url 'cart:remove_item' item.id %}"
+                                  hx-target="#cart-summary"
+                                  hx-select="#cart-summary > *"
+                                  hx-swap="innerHTML"
+                                  hx-sync="#cart-summary:queue"
+                                  hx-disabled-elt="button"
+                                  hx-push-url="false">
+                                {% csrf_token %}
+                                <button type="submit" class="text-red-600 hover:underline">Remove</button>
+                            </form>
+                        </div>
+                    {% endfor %}
+                </div>
+                {# Subtotal – განახლდება OOB-ით ყველა პასუხში #}
+                <div id="cart-subtotal"
+                     hx-swap-oob="true"
+                     class="mt-6 flex items-center justify-between">
+                    <div class="text-lg">
+                        <span class="muted">Subtotal</span>
+                        <span class="font-semibold">{{ cart.subtotal }}</span>
+                    </div>
+                    {# Clear – innerHTML swap, wrapper უცვლელი #}
+                    <form method="post"
+                          hx-post="{% url 'cart:clear' %}"
+                          hx-target="#cart-summary"
+                          hx-select="#cart-summary > *"
+                          hx-swap="innerHTML"
+                          hx-sync="#cart-summary:queue"
+                          hx-disabled-elt="button"
+                          hx-push-url="false">
+                        {% csrf_token %}
+                        <button type="submit" class="px-4 py-2 rounded-xl border card">Clear cart</button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="rounded-2xl border card p-12 text-center">
+                    <p class="muted">Your cart is empty</p>
+                    <p class="mt-2 text-sm muted">Start adding products to see them here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

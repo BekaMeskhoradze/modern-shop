@@ -1,0 +1,52 @@
+{% load static cart_tags %}
+{# მივიღოთ კალათის რაოდენობა ტეგით #}
+{% get_cart_count as cc %}
+{# context-ის cart_total_items იყოს პრიორიტეტული, თორემ fallback არის cc #}
+{% with cart_total_items|default:cc as cart_count %}
+    {% with variant|default:'header' as v %}
+        {% if v == 'mobile' %}
+            <a href="#"
+               class="relative p-2 rounded-xl hover:shadow-soft transition"
+               aria-label="Cart"
+               hx-get="{% url 'cart:cart_modal' %}"
+               hx-target="#cart-modal"
+               hx-swap="outerHTML"
+               hx-select="#cart-modal"
+               hx-push-url="false"
+               onclick="openCartModal(); return false;">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="w-6 h-6 opacity-80"
+                     viewBox="0 0 24 24"
+                     fill="currentColor">
+                    <path d="M7 18a2 2 0 111 3.999A2 2 0 017 18zm10 0a2 2 0 111 3.999A2 2 0 0117 18zM7.16 14h8.96c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0 0 20.58 5H6.21l-.94-2H2v2h2l3.6 7.59-1.35 2.45C5.89 16.37 6.48 17 7.21 17H19v-2H7.42l.74-1.33z" />
+                </svg>
+                <span id="cart-badge-mobile"
+                      class="absolute -top-1 -right-1 text-[10px] font-semibold rounded-full px-1 py-0.5"
+                      style="background: var(--accent);
+                             color:#fff">{{ cart_count|default:0 }}</span>
+            </a>
+        {% else %}
+            <a href="#"
+               class="relative inline-flex items-center gap-2 px-3 py-2 rounded-xl border card hover:shadow-soft transition"
+               hx-get="{% url 'cart:cart_modal' %}"
+               hx-target="#cart-modal"
+               hx-swap="outerHTML"
+               hx-select="#cart-modal"
+               hx-push-url="false"
+               onclick="openCartModal(); return false;"
+               aria-label="Open cart">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="w-5 h-5 opacity-80"
+                     viewBox="0 0 24 24"
+                     fill="currentColor">
+                    <path d="M7 18a2 2 0 111.999 4A2 2 0 017 18zm10 0a2 2 0 110 4 2 2 0 010-4zM7.16 14h8.96c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0 0 20.58 5H6.21L5.27 3H2v2h2l3.6 7.59-1.35 2.45A1.994 1.994 0 0 0 10 19h8v-2h-7.42c-.14 0-.25-.11-.25-.25l.03-.12L11.1 15h5.45a2 2 0 0 0 1.79-1.11l3.58-6.49A1 1 0 0 0 21 6H7z" />
+                </svg>
+                <span>Cart</span>
+                <span id="cart-badge"
+                      class="absolute -top-1.5 -right-1.5 text-[10px] font-semibold rounded-full px-1.5 py-0.5"
+                      style="background: var(--accent);
+                             color:#fff">{{ cart_count|default:0 }}</span>
+            </a>
+        {% endif %}
+    {% endwith %}
+{% endwith %}

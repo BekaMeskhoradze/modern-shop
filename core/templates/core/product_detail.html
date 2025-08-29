@@ -2,160 +2,217 @@
 {% load static %}
 {% block title %}{{ object.name }} — Modern Shop{% endblock %}
 {% block content %}
-    <!-- Breadcrumbs -->
-    <nav class="text-sm muted mb-6">
-        <a href="{% url 'core:index' %}" class="hover:underline">Home</a>
-        <span class="opacity-50">/</span>
-        <a href="{% url 'core:catalog_all' %}" class="hover:underline">Catalog</a>
-        <span class="opacity-50">/</span>
-        <a href="{% url 'core:catalog_category' object.category.slug %}"
-           class="hover:underline">{{ object.category.name }}</a>
-        <span class="opacity-50">/</span>
-        <span class="opacity-70">{{ object.name }}</span>
-    </nav>
-    <div class="grid md:grid-cols-2 gap-10">
-        <!-- LEFT: Gallery -->
-        <section>
-            <!-- Main image: FIXED HEIGHT -->
-            <div class="rounded-2xl border card p-3">
-                <div class="w-full h-[560px] md:h-[640px] bg-white/5 rounded-xl overflow-hidden grid place-items-center">
+    <style>
+    /* არჩევანის ვიზუალი (ზედმეტ JS-ის გარეშე) */
+    .size-selected{border-color:var(--accent)!important;background:rgba(245,158,11,.08)}
+    .thumb-selected{border-color:var(--accent)!important; box-shadow:0 0 0 2px rgba(245,158,11,.35)}
+    </style>
+    <section class="grid lg:grid-cols-2 gap-8">
+        <!-- Gallery -->
+        <div>
+            <div class="relative rounded-2xl overflow-hidden border card hover:shadow-soft transition"
+                 style="border-color:var(--line)">
+                <div class="relative pt-[100%] bg-[rgba(0,0,0,.04)] dark:bg-[rgba(255,255,255,.05)]">
+                    {% comment %} მთავარი სურათი {% endcomment %}
                     <img id="mainImage"
-                         src="{{ object.main_image.url }}"
+                         src="{% if object.main_image %}{{ object.main_image.url }} {% elif gallery_images %}{{ gallery_images.0.image.url }} {% else %}{% static 'img/placeholder.svg' %}{% endif %}"
                          alt="{{ object.name }}"
-                         class="w-full h-full object-contain"
-                         loading="eager" />
+                         class="absolute inset-0 w-full h-full object-cover"
+                         width="900"
+                         height="900"
+                         loading="lazy"
+                         decoding="async">
                 </div>
             </div>
-            <!-- Thumbnails (fixed size, no scroll) -->
-            <ul id="thumbs" class="mt-4 grid grid-cols-4 sm:grid-cols-6 gap-3">
-                <li>
+            {# თუმბნეილები – მთავარი სურათი პირველია #}
+            <div id="thumbs" class="mt-4 grid grid-cols-4 gap-2">
+                {% if object.main_image %}
                     <button type="button"
-                            class="thumb rounded-xl overflow-hidden border card ring-2 ring-[var(--accent)]">
+                            class="thumb rounded-xl overflow-hidden border card focus:outline-none hover:shadow-soft transition thumb-selected"
+                            data-src="{{ object.main_image.url }}"
+                            aria-pressed="true"
+                            style="border-color:var(--line)">
                         <img src="{{ object.main_image.url }}"
-                             data-full="{{ object.main_image.url }}"
-                             alt="{{ object.name }}"
-                             class="w-20 h-20 object-cover"
-                             loading="lazy" />
+                             alt=""
+                             class="w-full h-24 object-cover"
+                             loading="lazy">
                     </button>
-                </li>
-                {% for img in object.images.all %}
-                    <li>
-                        <button type="button" class="thumb rounded-xl overflow-hidden border card">
-                            <img src="{{ img.image.url }}"
-                                 data-full="{{ img.image.url }}"
-                                 alt="{{ object.name }} {{ forloop.counter }}"
-                                 class="w-20 h-20 object-cover"
-                                 loading="lazy" />
-                        </button>
-                    </li>
-                {% endfor %}
-            </ul>
-        </section>
-        <!-- RIGHT: Info -->
-        <section>
-            <h1 class="text-3xl font-semibold tracking-tight">{{ object.name }}</h1>
-            <p class="muted mt-1 uppercase tracking-wide text-sm">{{ object.color }}</p>
-            <div class="text-3xl font-semibold mt-4">{{ object.price }}</div>
-            <!-- CTA -->
-            <div class="mt-6 space-y-3">
-                <button id="addToCart"
-                        class="brand-btn w-full px-4 py-3 rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed">
-                    Add to cart
-                </button>
-                <button class="w-full px-4 py-3 rounded-xl border card hover:shadow-soft transition">Add to wishlist</button>
-            </div>
-            <!-- Size chooser -->
-            <div class="mt-6">
-                <h4 class="font-semibold mb-2">Size</h4>
-                <div class="flex flex-wrap gap-2" id="sizeOptions">
-                    {% for ps in object.product_size.all %}
+                {% elif gallery_images %}
+                    <button type="button"
+                            class="thumb rounded-xl overflow-hidden border card focus:outline-none hover:shadow-soft transition thumb-selected"
+                            data-src="{{ gallery_images.0.image.url }}"
+                            aria-pressed="true"
+                            style="border-color:var(--line)">
+                        <img src="{{ gallery_images.0.image.url }}"
+                             alt=""
+                             class="w-full h-24 object-cover"
+                             loading="lazy">
+                    </button>
+                {% else %}
+                    <button type="button"
+                            class="thumb rounded-xl overflow-hidden border card focus:outline-none transition thumb-selected"
+                            data-src="{% static 'img/placeholder.svg' %}"
+                            aria-pressed="true"
+                            style="border-color:var(--line)">
+                        <img src="{% static 'img/placeholder.svg' %}"
+                             alt=""
+                             class="w-full h-24 object-cover"
+                             loading="lazy">
+                    </button>
+                {% endif %}
+                {% for img in gallery_images %}
+                    {% if not object.main_image or img.image.url != object.main_image.url %}
                         <button type="button"
-                                class="size-chip px-3 py-2 rounded-lg border card text-sm transition disabled:opacity-50 disabled:cursor-not-allowed"
-                                data-size="{{ ps.size.name }}"
-                                {% if ps.stock|default:0 <= 0 %}disabled aria-disabled="true"{% endif %}
-                                title="{% if ps.stock|default:0 <= 0 %}Out of stock{% else %}{{ ps.size.name }}{% endif %}">
-                            {{ ps.size.name }}
+                                class="thumb rounded-xl overflow-hidden border card focus:outline-none hover:shadow-soft transition"
+                                data-src="{{ img.image.url }}"
+                                aria-pressed="false"
+                                style="border-color:var(--line)">
+                            <img src="{{ img.image.url }}"
+                                 alt=""
+                                 class="w-full h-24 object-cover"
+                                 loading="lazy">
                         </button>
-                    {% empty %}
-                        <span class="muted text-sm">No sizes available.</span>
-                    {% endfor %}
-                </div>
-                <p class="text-sm muted mt-2">
-                    Selected: <span id="sizeLabel">—</span>
-                </p>
-                <input type="hidden" name="size" id="selectedSize" />
+                    {% endif %}
+                {% endfor %}
             </div>
-            <!-- Details -->
-            <div class="mt-8 space-y-6">
-                <div>
-                    <h3 class="font-semibold mb-2">Details</h3>
-                    <p class="muted leading-relaxed">
-                        {% if object.description %}
-                            {{ object.description }}
-                        {% else %}
-                            Lorem Ipsum is simply dummy text of the printing and typesetting industry.
-                            Lorem Ipsum has been the industry's standard dummy text ever since the 1500s,
-                            when an unknown printer took a galley of type and scrambled it to make a type specimen book.
-                        {% endif %}
-                    </p>
-                </div>
-                <div>
-                    <h3 class="font-semibold mb-2">Care</h3>
-                    <ul class="list-disc pl-5 space-y-1 muted">
-                        <li>Professional dry clean only</li>
-                        <li>Do not bleach</li>
-                        <li>Iron at low temperature</li>
-                    </ul>
-                </div>
+        </div>
+        <!-- Info + Add to cart -->
+        <div>
+            <h1 class="text-2xl font-semibold tracking-tight">{{ object.name|upper }}</h1>
+            <p class="muted mt-1">{{ object.category.name }}</p>
+            <div class="mt-4 flex items-baseline gap-2">
+                <!-- მხოლოდ ფასი, VAT-ის გარეშე -->
+                <span class="text-xl font-semibold">{{ object.price }}</span>
             </div>
-        </section>
-    </div>
-    <!-- Scripts: gallery swap + size selection -->
+            {% if object.color %}<p class="mt-2 text-sm muted">Color: {{ object.color }}</p>{% endif %}
+            <div class="prose mt-6 max-w-none">{{ object.description|default:"" }}</div>
+            {% if has_stock %}
+                <!-- Sizes -->
+                <div class="mt-6">
+                    <p class="font-medium mb-2">Size</p>
+                    <div class="flex flex-wrap gap-2" id="sizeGroup">
+                        {% for ps in available_sizes %}
+                            <label class="size-option px-3 py-2 rounded-xl border card cursor-pointer {% if forloop.first %}size-selected{% endif %}">
+                                <input type="radio"
+                                       name="size_id"
+                                       value="{{ ps.id }}"
+                                       class="sr-only"
+                                       {% if forloop.first %}checked{% endif %}>
+                                <span>{{ ps.size.name }}</span>
+                            </label>
+                        {% endfor %}
+                    </div>
+                    <div class="mt-1 text-sm muted">
+                        Selected: <span id="selectedSize">{{ first_size.size.name }}</span>
+                    </div>
+                </div>
+                <!-- Add to cart -->
+                <div class="mt-4">
+                    <form hx-post="{% url 'cart:add_to_cart' object.slug %}"
+                          hx-target="#cart-modal"
+                          hx-swap="outerHTML"
+                          hx-select="#cart-modal"
+                          hx-sync="#cart-modal:queue"
+                          hx-disabled-elt="button, input, label"
+                          hx-trigger="submit throttle:400ms"
+                          hx-push-url="false"
+                          class="space-y-4">
+                        {% csrf_token %}
+                        <input type="hidden"
+                               name="size_id"
+                               id="sizeHidden"
+                               value="{{ first_size.id }}">
+                        <div class="flex items-center gap-2">
+                            <input type="number"
+                                   min="1"
+                                   value="1"
+                                   name="quantity"
+                                   class="w-20 px-3 py-2 rounded-xl border card">
+                            <button type="submit" class="flex-1 brand-btn px-4 py-3 rounded-xl">Add to cart</button>
+                        </div>
+                    </form>
+                </div>
+            {% else %}
+                <button class="mt-4 w-full px-4 py-3 rounded-xl border card opacity-60 cursor-not-allowed"
+                        disabled>Out of stock</button>
+            {% endif %}
+            <ul class="mt-6 grid sm:grid-cols-2 gap-2 text-sm muted">
+                <li>⚡ Fast delivery</li>
+                <li>↩️ Easy returns</li>
+                <li>💬 Support</li>
+                <li>🔒 Secure checkout</li>
+            </ul>
+        </div>
+    </section>
+    <!-- Related -->
+    <section class="mt-12">
+        <h2 class="text-xl font-semibold tracking-tight mb-4">Related products</h2>
+        {% if related_products %}
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+                {% for p in related_products %}
+                    <a href="{{ p.get_absolute_url }}"
+                       class="group rounded-2xl border card p-3 hover:shadow-soft transition">
+                        <div class="relative rounded-xl overflow-hidden border"
+                             style="border-color:var(--line)">
+                            <div class="relative pt-[100%] bg-[rgba(0,0,0,.04)] dark:bg-[rgba(255,255,255,.05)]">
+                                <img src="{% if p.main_image %}{{ p.main_image.url }}{% else %}{% static 'img/placeholder.svg' %}{% endif %}"
+                                     alt="{{ p.name }}"
+                                     class="absolute inset-0 w-full h-full object-cover"
+                                     loading="lazy">
+                            </div>
+                        </div>
+                        <div class="pt-3 space-y-1">
+                            <h3 class="font-medium truncate">{{ p.name }}</h3>
+                            <div class="text-sm font-semibold">{{ p.price }}</div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="muted">No related products.</p>
+        {% endif %}
+    </section>
     <script>
-  (function () {
-    /* ---------- Gallery ---------- */
-    const main = document.getElementById("mainImage");
-    const buttons = document.querySelectorAll("#thumbs .thumb");
+    // ----- Sizes: ვიზუალი + hidden input + "Selected: X" -----
+    (function(){
+      const group  = document.getElementById('sizeGroup');
+      const hidden = document.getElementById('sizeHidden');
+      const out    = document.getElementById('selectedSize');
+      if(!group) return;
 
-    function select(btn) {
-      buttons.forEach(b => b.classList.remove("ring-2", "ring-[var(--accent)]"));
-      btn.classList.add("ring-2", "ring-[var(--accent)]");
-      const img = btn.querySelector("img");
-      const full = img.dataset.full || img.src;
-      main.src = full;
-      main.srcset = "";
-    }
+      const setVisual = () => {
+        group.querySelectorAll('label.size-option').forEach(l => l.classList.remove('size-selected'));
+        const checked = group.querySelector('input[name="size_id"]:checked');
+        if(checked){
+          checked.closest('label')?.classList.add('size-selected');
+          hidden.value = checked.value;
+          out.textContent = checked.closest('label')?.innerText.trim();
+        }
+      };
+      group.addEventListener('change', e => { if(e.target.name==='size_id'){ setVisual(); }});
+      setVisual();
+    })();
 
-    buttons.forEach(btn => btn.addEventListener("click", () => select(btn)));
+    // ----- Thumbnails: არჩევა + მთავარი სურათის შეცვლა -----
+    (function () {
+      const thumbsWrap = document.getElementById('thumbs');
+      const mainImage  = document.getElementById('mainImage');
+      if (!thumbsWrap || !mainImage) return;
 
-    /* ---------- Size selection ---------- */
-    const chips  = document.querySelectorAll(".size-chip");
-    const hidden = document.getElementById("selectedSize");
-    const label  = document.getElementById("sizeLabel");
-    const addBtn = document.getElementById("addToCart");
-
-    function setActiveSize(btn) {
-      chips.forEach(b => b.classList.remove("ring-2", "ring-offset-2"));
-      if (btn) {
-        btn.classList.add("ring-2", "ring-offset-2");
-        btn.style.setProperty("--tw-ring-color", "var(--accent)");
-        hidden.value = btn.dataset.size;
-        label.textContent = btn.dataset.size;
-      } else {
-        hidden.value = "";
-        label.textContent = "—";
+      const buttons = Array.from(thumbsWrap.querySelectorAll('.thumb'));
+      function markThumb(btn){
+        buttons.forEach(b => { b.classList.remove('thumb-selected'); b.setAttribute('aria-pressed','false'); });
+        btn.classList.add('thumb-selected');
+        btn.setAttribute('aria-pressed','true');
       }
-      const disabled = !hidden.value;
-      addBtn.disabled = disabled;
-      addBtn.classList.toggle("opacity-50", disabled);
-      addBtn.classList.toggle("cursor-not-allowed", disabled);
-    }
 
-    chips.forEach(btn => btn.addEventListener("click", () => setActiveSize(btn)));
-
-    // Select first available size by default
-    const firstAvailable = Array.from(chips).find(b => !b.disabled);
-    setActiveSize(firstAvailable || null);
-  })();
+      thumbsWrap.addEventListener('click', (e) => {
+        const btn = e.target.closest('.thumb');
+        if (!btn) return;
+        const src = btn.getAttribute('data-src');
+        if (src) mainImage.src = src;
+        markThumb(btn);
+      });
+    })();
     </script>
 {% endblock %}

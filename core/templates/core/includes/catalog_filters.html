@@ -1,32 +1,44 @@
-<div id="filters-overlay" class="fixed inset-0 z-[60] hidden">
-    <div class="absolute inset-0 bg-black/30" onclick="closeFilters()"></div>
+<div id="filters-overlay"
+     class="fixed inset-0 z-[60]"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="filters-title">
+    <!-- backdrop (click outside -> close) -->
+    <div class="absolute inset-0 bg-black/30"
+         onclick="closeFilters()"
+         aria-hidden="true"></div>
     <aside id="filters-sheet"
-           class="absolute right-0 top-0 h-full w-full max-w-md surface shadow-2xl transform translate-x-full transition-transform duration-200">
+           class="absolute right-0 top-0 h-full w-full max-w-md surface shadow-2xl transform transition-transform duration-200 translate-x-0">
+        <!-- header -->
         <div class="p-4 border-b flex items-center justify-between"
              style="border-color: var(--line)">
-            <h2 class="text-lg font-semibold">Filters</h2>
+            <h2 id="filters-title" class="text-lg font-semibold">Filters</h2>
             <button type="button"
                     class="px-2 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-                    onclick="closeFilters()">✕</button>
+                    onclick="closeFilters()"
+                    aria-label="Close">✕</button>
         </div>
+        <!-- body -->
         <div class="p-4 overflow-y-auto h-[calc(100%-56px)]">
             <form method="get" action="{{ request.path }}" class="space-y-4">
+                {# შევინარჩუნოთ არჩეული category (თუ იყო) #}
                 {% if filter_params.category %}<input type="hidden" name="category" value="{{ filter_params.category }}">{% endif %}
                 <div>
                     <label class="block text-sm mb-1">Search in names</label>
                     <input type="text"
                            name="name"
                            value="{{ filter_params.name }}"
+                           class="w-full px-3 py-2 rounded-xl border card"
                            placeholder="e.g. jacket"
-                           class="w-full px-3 py-2 rounded-xl border card">
+                           autofocus>
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Color</label>
                     <input type="text"
                            name="color"
                            value="{{ filter_params.color }}"
-                           placeholder="e.g. Black"
-                           class="w-full px-3 py-2 rounded-xl border card">
+                           class="w-full px-3 py-2 rounded-xl border card"
+                           placeholder="e.g. Black">
                 </div>
                 <div>
                     <label class="block text-sm mb-1">Size</label>
@@ -70,25 +82,34 @@
                 </div>
                 <div class="pt-2 flex items-center gap-2">
                     <button type="submit" class="px-4 py-2 rounded-xl brand-btn">Apply</button>
-                    <a href="{{ request.path }}" class="px-4 py-2 rounded-xl border card">Clear</a>
+                    <a href="{{ request.path }}"
+                       class="px-4 py-2 rounded-xl border card"
+                       onclick="closeFilters()">Clear</a>
+                    <button type="button"
+                            class="ml-auto px-3 py-2 rounded-xl border card"
+                            onclick="closeFilters()">Close</button>
                 </div>
             </form>
         </div>
     </aside>
 </div>
 <script>
-    (function openNow(){
-      const o = document.getElementById('filters-overlay');
-      const s = document.getElementById('filters-sheet');
-      if(!o || !s) return;
-      o.classList.remove('hidden');
-      requestAnimationFrame(()=>{ s.classList.remove('translate-x-full'); });
+    // დახურვა (ანიმაციით + scroll unlock + modal cleanup)
+    (function () {
+      window.closeFilters = function () {
+        const o = document.getElementById('filters-overlay');
+        const s = document.getElementById('filters-sheet');
+        if (!o || !s) return;
+        s.classList.add('translate-x-full');
+        document.documentElement.classList.remove('overflow-hidden');
+        setTimeout(() => {
+          const m = document.getElementById('modal');
+          if (m) m.innerHTML = ''; // ამოღება DOM-იდან
+        }, 180);
+      };
+      // ESC-ით დახურვა
+      document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeFilters(); });
+      // scroll lock ჩართვა, რადგან overlay უკვე ჩაისვა გახსნილ მდგომარეობაში
+      document.documentElement.classList.add('overflow-hidden');
     })();
-    function closeFilters(){
-      const o = document.getElementById('filters-overlay');
-      const s = document.getElementById('filters-sheet');
-      if(!o || !s) return;
-      s.classList.add('translate-x-full');
-      setTimeout(()=>{ o.classList.add('hidden'); }, 200);
-    }
 </script>
