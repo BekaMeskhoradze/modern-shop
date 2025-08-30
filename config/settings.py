@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-from django.conf.global_settings import SESSION_COOKIE_AGE, SESSION_SAVE_EVERY_REQUEST
+from django.conf.global_settings import AUTH_USER_MODEL, SESSION_COOKIE_AGE, SESSION_SAVE_EVERY_REQUEST
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -46,6 +46,7 @@ INSTALLED_APPS = [
     #local apps
     'core',
     'cart',
+    'users'
 ]
 
 MIDDLEWARE = [
@@ -146,4 +147,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SESSION_COOKIE_AGE = 86400  # 30 days
 SESSION_SAVE_EVERY_REQUEST = True
 
-
+AUTH_USER_MODEL = 'users.CustomUser'
