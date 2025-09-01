@@ -46,11 +46,14 @@ class LoginView(DjangoLoginView):
     redirect_authenticated_user = True
 
     def form_valid(self, form):
+        response = super().form_valid(form)
+
         messages.success(self.request, "Welcome back!")
-        resp = hx_redirect(self.request, "core:index")
-        if resp:
-            return resp
-        return super().form_valid(form)
+
+        if self.request.headers.get("HX-Request"):
+            return HttpResponse(headers={"HX-Redirect": reverse("core:index")})
+
+        return response
 
 
 # ------------ Logout ------------
@@ -58,7 +61,6 @@ class LogoutView(DjangoLogoutView):
     next_page = reverse_lazy("core:index")
 
     def dispatch(self, request, *args, **kwargs):
-        # django LogoutView თვითონ აკეთებს logout-ს
         response = super().dispatch(request, *args, **kwargs)
         if request.headers.get("HX-Request"):
             return HttpResponse(headers={"HX-Redirect": reverse("core:index")})
@@ -74,7 +76,7 @@ class ProfileView(LoginRequiredMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         ctx["form"] = CustomUserUpdateForm(instance=self.request.user)
         ctx["user"] = self.request.user
-        ctx["recomended_products"] = Product.objects.order_by("id")[:3]
+        ctx["recommended_products"] = Product.objects.order_by("id")[:3]
         return ctx
 
     def post(self, request, *args, **kwargs):

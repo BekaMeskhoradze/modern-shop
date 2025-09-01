@@ -1,0 +1,65 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Register — Modern Shop{% endblock %}
+{% block content %}
+    <section class="max-w-md mx-auto">
+        <div class="rounded-2xl border surface p-6 shadow-soft">
+            <header class="mb-6 text-center">
+                <h1 class="text-2xl font-semibold tracking-tight">Create your account</h1>
+                <p class="mt-1 text-sm muted">
+                    Already have an account?
+                    <a href="{% url 'users:login' %}" class="underline hover:no-underline">Sign in</a>
+                </p>
+            </header>
+            <form method="post" novalidate class="space-y-4">
+                {% csrf_token %}
+                {# Global / non-field errors #}
+                {% if form.non_field_errors %}
+                    <div class="rounded-xl border card px-3 py-2 text-sm text-red-600">{{ form.non_field_errors }}</div>
+                {% endif %}
+                {# Hidden fields (if any) #}
+                {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                {# First name #}
+                <div>
+                    <label for="{{ form.first_name.id_for_label }}" class="block text-sm mb-1">First name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.help_text %}<p class="text-xs muted mt-1">{{ form.first_name.help_text|safe }}</p>{% endif %}
+                    {% for e in form.first_name.errors %}<p class="text-sm text-red-600 mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                {# Last name #}
+                <div>
+                    <label for="{{ form.last_name.id_for_label }}" class="block text-sm mb-1">Last name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.help_text %}<p class="text-xs muted mt-1">{{ form.last_name.help_text|safe }}</p>{% endif %}
+                    {% for e in form.last_name.errors %}<p class="text-sm text-red-600 mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                {# Email #}
+                <div>
+                    <label for="{{ form.email.id_for_label }}" class="block text-sm mb-1">Email</label>
+                    {{ form.email }}
+                    {% if form.email.help_text %}<p class="text-xs muted mt-1">{{ form.email.help_text|safe }}</p>{% endif %}
+                    {% for e in form.email.errors %}<p class="text-sm text-red-600 mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                {# Password #}
+                <div>
+                    <label for="{{ form.password1.id_for_label }}" class="block text-sm mb-1">Password</label>
+                    {{ form.password1 }}
+                    {% if form.password1.help_text %}<div class="text-xs muted mt-1">{{ form.password1.help_text|safe }}</div>{% endif %}
+                    {% for e in form.password1.errors %}<p class="text-sm text-red-600 mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                {# Confirm password #}
+                <div>
+                    <label for="{{ form.password2.id_for_label }}" class="block text-sm mb-1">Confirm password</label>
+                    {{ form.password2 }}
+                    {% if form.password2.help_text %}<p class="text-xs muted mt-1">{{ form.password2.help_text|safe }}</p>{% endif %}
+                    {% for e in form.password2.errors %}<p class="text-sm text-red-600 mt-1">{{ e }}</p>{% endfor %}
+                </div>
+                <button type="submit"
+                        class="w-full px-4 py-2.5 rounded-xl brand-btn hover:opacity-90 transition">
+                    Create account
+                </button>
+            </form>
+            <p class="mt-4 text-xs muted text-center">By continuing, you agree to our Terms and Privacy Policy.</p>
+        </div>
+    </section>
+{% endblock %}

@@ -1,0 +1,59 @@
+{% load static %}
+<div id="account-card" class="rounded-2xl border surface p-6">
+    <div class="flex items-start justify-between">
+        <h2 class="text-lg font-semibold">Profile</h2>
+        <button class="px-3 py-1.5 rounded-xl border card hover:shadow-soft transition"
+                hx-get="{% url 'users:edit_account_details' %}"
+                hx-target="#account-card"
+                hx-select="#account-card"
+                hx-swap="outerHTML"
+                hx-push-url="false">Edit</button>
+    </div>
+    <p class="mt-1 text-sm muted">Personal & contact info</p>
+    <div class="mt-6 grid sm:grid-cols-2 gap-6 text-sm">
+        <div>
+            <div class="muted">First name</div>
+            <div class="font-medium">{{ user.first_name|default:"—" }}</div>
+        </div>
+        <div>
+            <div class="muted">Last name</div>
+            <div class="font-medium">{{ user.last_name|default:"—" }}</div>
+        </div>
+        <div class="sm:col-span-2">
+            <div class="muted">Email</div>
+            <div class="font-medium break-all">{{ user.email|default:"—" }}</div>
+        </div>
+        <div>
+            <div class="muted">Company</div>
+            <div class="font-medium">{{ user.company|default:"—" }}</div>
+        </div>
+        <div>
+            <div class="muted">Address line 1</div>
+            <div class="font-medium">{{ user.address1|default:"—" }}</div>
+        </div>
+        <div>
+            <div class="muted">Address line 2</div>
+            <div class="font-medium">{{ user.address2|default:"—" }}</div>
+        </div>
+        <div>
+            <div class="muted">City</div>
+            <div class="font-medium">{{ user.city|default:"—" }}</div>
+        </div>
+        <div>
+            <div class="muted">Province/State</div>
+            <div class="font-medium">{{ user.province|default:"—" }}</div>
+        </div>
+        <div>
+            <div class="muted">Country</div>
+            <div class="font-medium">{{ user.country|default:"—" }}</div>
+        </div>
+        <div>
+            <div class="muted">Postal code</div>
+            <div class="font-medium">{{ user.postal_code|default:"—" }}</div>
+        </div>
+        <div>
+            <div class="muted">Phone</div>
+            <div class="font-medium">{{ user.phone|default:"—" }}</div>
+        </div>
+    </div>
+</div>

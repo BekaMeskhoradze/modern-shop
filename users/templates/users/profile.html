@@ -1,0 +1,44 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Your Account — Modern Shop{% endblock %}
+{% block content %}
+    <section class="max-w-6xl mx-auto">
+        <header class="mb-6">
+            <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">Your Account</h1>
+            <p class="mt-1 muted">Manage your profile and contact details</p>
+        </header>
+        <div class="grid md:grid-cols-3 gap-6">
+            <!-- LEFT: account card (HTMX target) -->
+            <div class="md:col-span-2">{% include "users/partials/account_details.html" %}</div>
+            <!-- RIGHT: recommended -->
+            <aside class="md:col-span-1">
+                <div class="rounded-2xl border surface p-6">
+                    <h2 class="text-lg font-semibold mb-4">Recommended</h2>
+                    {% with recs=recommended_products|default:recommended_products %}
+                        {% if recs %}
+                            <ul class="space-y-4">
+                                {% for p in recs %}
+                                    <li class="flex items-center gap-3">
+                                        <a href="{% url 'core:product_detail' p.slug %}" class="shrink-0">
+                                            <img src="{% if p.main_image %}{{ p.main_image.url }}{% else %}{% static 'img/placeholder.svg' %}{% endif %}"
+                                                 alt="{{ p.name }}"
+                                                 class="w-14 h-14 rounded-lg object-cover border"
+                                                 style="border-color: var(--line)" />
+                                        </a>
+                                        <div class="min-w-0">
+                                            <a class="font-medium hover:underline truncate"
+                                               href="{% url 'core:product_detail' p.slug %}">{{ p.name }}</a>
+                                            <div class="text-sm muted">{{ p.price }}</div>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-sm muted">No recommendations yet.</p>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+            </aside>
+        </div>
+    </section>
+{% endblock %}

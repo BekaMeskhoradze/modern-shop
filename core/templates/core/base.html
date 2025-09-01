@@ -125,16 +125,69 @@
           </form>
           <!-- Actions -->
           <div class="flex items-center gap-2">
-            <a href="{% url 'core:catalog_all' %}"
-               class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl border card hover:shadow-soft transition">
-              <svg xmlns="http://www.w3.org/2000/svg"
-                   class="w-5 h-5 opacity-80"
-                   viewBox="0 0 24 24"
-                   fill="currentColor">
-                <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.2 0-8 2.1-8 5v1h16v-1c0-2.9-3.8-5-8-5z" />
-              </svg>
-              <span>Account</span>
-            </a>
+            {% if request.user.is_authenticated %}
+              <!-- Account dropdown -->
+              <div class="relative">
+                <button id="accountMenuBtn"
+                        type="button"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-xl border card hover:shadow-soft transition"
+                        aria-haspopup="menu"
+                        aria-expanded="false">
+                  <svg xmlns="http://www.w3.org/2000/svg"
+                       class="w-5 h-5 opacity-80"
+                       viewBox="0 0 24 24"
+                       fill="currentColor">
+                    <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.2 0-8 2.1-8 5v1h16v-1c0-2.9-3.8-5-8-5z" />
+                  </svg>
+                  <span class="truncate max-w-[120px]">{{ request.user.first_name|default:"Account" }}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg"
+                       class="w-4 h-4 opacity-70"
+                       viewBox="0 0 24 24"
+                       fill="currentColor">
+                    <path d="M7 10l5 5 5-5z" />
+                  </svg>
+                </button>
+                <!-- Dropdown -->
+                <div id="accountMenu"
+                     class="hidden absolute right-0 mt-2 w-56 rounded-xl border card shadow-soft z-[60] overflow-hidden">
+                  <a href="{% url 'users:profile' %}"
+                     class="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         class="w-4 h-4 opacity-80"
+                         viewBox="0 0 24 24"
+                         fill="currentColor">
+                      <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.2 0-8 2.1-8 5v1h16v-1c0-2.9-3.8-5-8-5z" />
+                    </svg>
+                    <span>Profile</span>
+                  </a>
+                  <div class="border-t" style="border-color: var(--line)"></div>
+                  <form method="post" action="{% url 'users:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit"
+                            class="w-full text-left flex items-center gap-2 px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-800 text-red-600">
+                      <svg xmlns="http://www.w3.org/2000/svg"
+                           class="w-4 h-4 opacity-80"
+                           viewBox="0 0 24 24"
+                           fill="currentColor">
+                        <path d="M10 17l5-5-5-5v10zm-4 4h8v-2H6V5h8V3H6a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                      </svg>
+                      <span>Sign out</span>
+                    </button>
+                  </form>
+                </div>
+              </div>
+            {% else %}
+              <a href="{% url 'users:login' %}"
+                 class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl border card hover:shadow-soft transition">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     class="w-5 h-5 opacity-80"
+                     viewBox="0 0 24 24"
+                     fill="currentColor">
+                  <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.2 0-8 2.1-8 5v1હ16v-1c0-2.9-3.8-5-8-5z" />
+                </svg>
+                <span>Sign in</span>
+              </a>
+            {% endif %}
             {% include "cart/includes/cart_button.html" %}
             <!-- Theme toggle -->
             <button id="themeToggle"
@@ -145,7 +198,7 @@
                    class="w-5 h-5 block dark:hidden"
                    viewBox="0 0 24 24"
                    fill="currentColor">
-                <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.04 2.46l1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM20 13h3v-2h-3v2zm-8 8h2v-3h-2v3zM4.96 18.54l-1.79 1.8 1.41 1.41 1.8-1.79-1.42-1.42zM17.24 19.16l1.8 1.79 1.41-1.41-1.79-1.8-1.42 1.42zM12 6a6 6 0 100 12A6 6 0 0012 6z" />
+                <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.04 2.46l1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM20 13h3v-2h-3v2zm-8 8h2v-3h-2વ3zM4.96 18.54l-1.79 1.8 1.41 1.41 1.8-1.79-1.42-1.42zM17.24 19.16l1.8 1.79 1.41-1.41-1.79-1.8-1.42 1.42zM12 6a6 6 0 100 12A6 6 0 0012 6z" />
               </svg>
               <svg id="moon"
                    class="w-5 h-5 hidden dark:block"
@@ -181,6 +234,16 @@
     </header>
     <!-- Main -->
     <main id="content" class="max-w-7xl mx-auto px-4 py-10">
+      {# Messages banner #}
+      {% if messages %}
+        <div class="mb-4">
+          {% for message in messages %}
+            <div class="rounded-xl border card px-4 py-3 text-sm {% if message.tags == 'success' %} border-green-200 {% elif message.tags == 'error' %} border-red-300 {% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
       {% block content %}{% endblock %}
     </main>
     <!-- Footer -->
@@ -203,6 +266,13 @@
                 </li>
                 <li>
                   <a href="/contact/" class="hover:underline">Contact</a>
+                </li>
+                <li>
+                  {% if request.user.is_authenticated %}
+                    <a href="{% url 'users:profile' %}" class="hover:underline">Account</a>
+                  {% else %}
+                    <a href="{% url 'users:login' %}" class="hover:underline">Sign in</a>
+                  {% endif %}
                 </li>
                 <li>
                   <a href="#"
@@ -252,6 +322,29 @@
             <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4z" />
           </svg>
         </a>
+        {% if request.user.is_authenticated %}
+          <a href="{% url 'users:profile' %}"
+             class="p-2 rounded-xl hover:shadow-soft transition"
+             aria-label="Account">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 class="w-6 h-6 opacity-80"
+                 viewBox="0 0 24 24"
+                 fill="currentColor">
+              <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.2 0-8 2.1-8 5v1h16v-1c0-2.9-3.8-5-8-5z" />
+            </svg>
+          </a>
+        {% else %}
+          <a href="{% url 'users:login' %}"
+             class="p-2 rounded-xl hover:shadow-soft transition"
+             aria-label="Sign in">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 class="w-6 h-6 opacity-80"
+                 viewBox="0 0 24 24"
+                 fill="currentColor">
+              <path d="M12 12a5 5 0 100-10 5 5 0 000 10zm0 2c-4.2 0-8 2.1-8 5વ1h16v-1c0-2.9-3.8-5-8-5z" />
+            </svg>
+          </a>
+        {% endif %}
         {% include "cart/includes/cart_button.html" with variant='mobile' %}
         <a href="{% url 'core:search' %}"
            class="p-2 rounded-xl hover:shadow-soft transition"
@@ -269,7 +362,7 @@
           <svg class="w-6 h-6 block dark:hidden"
                viewBox="0 0 24 24"
                fill="currentColor">
-            <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM1 13h3v-2H1v2zm10-9h2V1h-2v3zm7.04 2.46l1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM20 13h3v-2h-3v2zm-8 8h2v-3h-2v3zM4.96 18.54l-1.79 1.8 1.41 1.41 1.8-1.79-1.42-1.42zM17.24 19.16l1.8 1.79 1.41-1.41-1.79-1.8-1.42 1.42zM12 6a6 6 0 100 12A6 6 0 0012 6z" />
+            <path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.8 1.42-1.42zM1 13h3v-2H1વ2zm10-9h2V1h-2v3zm7.04 2.46લ1.79-1.8-1.41-1.41-1.8 1.79 1.42 1.42zM20 13h3v-2h-3વ2zm-8 8h2v-3h-2વ3zM4.96 18.54લ-1.79 1.8 1.41 1.41 1.8-1.79-1.42-1.42zM17.24 19.16લ1.8 1.79 1.41-1.41-1.79-1.8-1.42 1.42zM12 6a6 6 0 100 12A6 6 0 0012 6z" />
           </svg>
           <svg class="w-6 h-6 hidden dark:block"
                viewBox="0 0 24 24"
@@ -297,7 +390,7 @@
         </div>
       </div>
     </div>
-    <!-- Theme + Cart helpers + GLOBAL Filters helper -->
+    <!-- Theme + Cart helpers + GLOBAL Filters helper + Account dropdown JS -->
     <script>
       function applyTheme(isDark){
         const root=document.documentElement;
@@ -377,6 +470,28 @@
           closeFilters();
         }
       });
+
+      /* ----------------------------
+         Account dropdown logic
+      ---------------------------- */
+      (function(){
+        const btn  = document.getElementById('accountMenuBtn');
+        const menu = document.getElementById('accountMenu');
+        if(!btn || !menu) return;
+
+        let open = false;
+        function show(){ menu.classList.remove('hidden'); btn.setAttribute('aria-expanded','true'); open = true; }
+        function hide(){ menu.classList.add('hidden');   btn.setAttribute('aria-expanded','false'); open = false; }
+        function toggle(){ open ? hide() : show(); }
+
+        btn.addEventListener('click', (e)=>{ e.stopPropagation(); toggle(); });
+
+        // click outside
+        document.addEventListener('click', () => { if(open) hide(); });
+
+        // ESC
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && open) hide(); });
+      })();
     </script>
   </body>
 </html>

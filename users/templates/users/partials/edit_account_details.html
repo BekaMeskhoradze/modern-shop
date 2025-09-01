@@ -1,0 +1,94 @@
+{% load static %}
+<div id="account-card" class="rounded-2xl border surface p-6">
+    <div class="flex items-start justify-between">
+        <h2 class="text-lg font-semibold">Edit profile</h2>
+        <button class="px-3 py-1.5 rounded-xl border card hover:shadow-soft transition"
+                hx-get="{% url 'users:account_details' %}"
+                hx-target="#account-card"
+                hx-select="#account-card"
+                hx-swap="outerHTML"
+                hx-push-url="false">Cancel</button>
+    </div>
+    <form method="post"
+          hx-post="{% url 'users:edit_account_details' %}"
+          hx-target="#account-card"
+          hx-select="#account-card"
+          hx-swap="outerHTML"
+          hx-disabled-elt="button, fieldset, input, select, textarea"
+          hx-sync="#account-card:queue"
+          hx-push-url="false"
+          class="mt-6 grid sm:grid-cols-2 gap-4">
+        {% csrf_token %}
+        <div>
+            <label class="block text-sm mb-1">First name</label>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ form.first_name.errors|striptags }}</p>
+            {% endif %}
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Last name</label>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ form.last_name.errors|striptags }}</p>
+            {% endif %}
+        </div>
+        <div class="sm:col-span-2">
+            <label class="block text-sm mb-1">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}<p class="text-red-600 text-sm mt-1">{{ form.email.errors|striptags }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Company</label>
+            {{ form.company }}
+            {% if form.company.errors %}<p class="text-red-600 text-sm mt-1">{{ form.company.errors|striptags }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Address line 1</label>
+            {{ form.address1 }}
+            {% if form.address1.errors %}<p class="text-red-600 text-sm mt-1">{{ form.address1.errors|striptags }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Address line 2</label>
+            {{ form.address2 }}
+            {% if form.address2.errors %}<p class="text-red-600 text-sm mt-1">{{ form.address2.errors|striptags }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm mb-1">City</label>
+            {{ form.city }}
+            {% if form.city.errors %}<p class="text-red-600 text-sm mt-1">{{ form.city.errors|striptags }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Province/State</label>
+            {{ form.province }}
+            {% if form.province.errors %}<p class="text-red-600 text-sm mt-1">{{ form.province.errors|striptags }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Country</label>
+            {{ form.country }}
+            {% if form.country.errors %}<p class="text-red-600 text-sm mt-1">{{ form.country.errors|striptags }}</p>{% endif %}
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Postal code</label>
+            {{ form.postal_code }}
+            {% if form.postal_code.errors %}
+                <p class="text-red-600 text-sm mt-1">{{ form.postal_code.errors|striptags }}</p>
+            {% endif %}
+        </div>
+        <div>
+            <label class="block text-sm mb-1">Phone</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}<p class="text-red-600 text-sm mt-1">{{ form.phone.errors|striptags }}</p>{% endif %}
+        </div>
+        <div class="sm:col-span-2 pt-2 flex items-center gap-2">
+            <button type="submit" class="px-4 py-2 rounded-xl brand-btn">Save changes</button>
+            <button type="button"
+                    class="px-4 py-2 rounded-xl border card"
+                    hx-get="{% url 'users:account_details' %}"
+                    hx-target="#account-card"
+                    hx-select="#account-card"
+                    hx-swap="outerHTML"
+                    hx-push-url="false">Cancel</button>
+        </div>
+    </form>
+</div>
