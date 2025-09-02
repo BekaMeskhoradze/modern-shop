@@ -18,6 +18,15 @@ local_settings.py
 env/
 ENV/
 
+# Secrets / env files
+.env
+.env.*
+*.env
+*.env.*
+.envrc
+*.key
+*.pem
+
 # IDEs / Editors
 .vscode/
 .idea/
