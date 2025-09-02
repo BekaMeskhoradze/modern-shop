@@ -35,7 +35,6 @@ def create_stripe_checkout_session(order, request):
             },
             'quantity': oi.quantity,
         })
-
     checkout_session = stripe.checkout.Session.create(
         payment_method_types=['card'],
         line_items=line_items,
