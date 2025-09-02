@@ -15,7 +15,7 @@ local_settings.py
 
 # Environments
 .venv/
-# env/
+env/
 ENV/
 
 # IDEs / Editors
