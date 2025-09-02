@@ -1,0 +1,54 @@
+{% extends "core/base.html" %}
+{% block title %}My Orders — Modern Shop{% endblock %}
+{% block content %}
+    <section class="max-w-5xl mx-auto">
+        <h1 class="text-2xl font-semibold mb-6">My orders</h1>
+        {% if orders %}
+            <div class="space-y-4">
+                {% for o in orders %}
+                    <a href="{% url 'orders:order_detail' o.id %}"
+                       class="block rounded-2xl border card p-4 hover:shadow-soft transition">
+                        <div class="flex items-center justify-between gap-4">
+                            <div>
+                                <div class="font-medium">Order #{{ o.id }}</div>
+                                <div class="text-sm muted mt-0.5">
+                                    {{ o.created_at|date:"Y-m-d H:i" }} · {{ o.items.count }} item{{ o.items.count|pluralize }}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm">
+                                    <span class="px-2 py-0.5 rounded-lg border"
+                                          style="border-color: var(--line)">{{ o.status|capfirst }}</span>
+                                </div>
+                                <div class="font-semibold mt-1">{{ o.total_price }}</div>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+            {% if is_paginated %}
+                <div class="mt-6 flex items-center justify-between">
+                    {% if page_obj.has_previous %}
+                        <a class="px-3 py-2 rounded-xl border card"
+                           href="?page={{ page_obj.previous_page_number }}">Prev</a>
+                    {% else %}
+                        <span></span>
+                    {% endif %}
+                    <span class="text-sm muted">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    {% if page_obj.has_next %}
+                        <a class="px-3 py-2 rounded-xl border card"
+                           href="?page={{ page_obj.next_page_number }}">Next</a>
+                    {% else %}
+                        <span></span>
+                    {% endif %}
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="rounded-2xl border card p-12 text-center">
+                <p class="muted">You don’t have any orders yet.</p>
+                <a href="{% url 'core:catalog_all' %}"
+                   class="inline-block mt-4 px-4 py-2 rounded-xl brand-btn">Start shopping</a>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

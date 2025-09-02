@@ -6,9 +6,29 @@
         <h1 class="text-2xl font-semibold mb-4">Your Cart</h1>
         <div id="cart-summary">
             {% if cart.total_items %}
+                {# Header actions bar #}
+                <div class="mb-4 flex items-center justify-between gap-2">
+                    <a href="{% url 'core:catalog_all' %}"
+                       class="px-3 py-2 rounded-xl border card text-sm">← Continue shopping</a>
+                    <div class="flex items-center gap-2">
+                        <form method="post"
+                              hx-post="{% url 'cart:clear' %}"
+                              hx-target="#cart-summary"
+                              hx-select="#cart-summary > *"
+                              hx-swap="innerHTML"
+                              hx-sync="#cart-summary:queue"
+                              hx-disabled-elt="button"
+                              hx-push-url="false">
+                            {% csrf_token %}
+                            <button type="submit" class="px-3 py-2 rounded-xl border card text-sm">Clear cart</button>
+                        </form>
+                        <a href="{% url 'orders:checkout' %}"
+                           class="px-4 py-2 rounded-xl brand-btn text-sm hover:opacity-90 transition">Checkout</a>
+                    </div>
+                </div>
                 <div class="space-y-4">
                     {% for item in items %}
-                        {# თითოეული რიგი უნიკალური id-ით, რომ მხოლოდ ის განახლდეს #}
+                        {# უნიკალური wrapper, რომ ნაწილობრივ განახლდეს #}
                         <div id="cart-item-{{ item.id }}"
                              class="rounded-2xl border card p-4 flex items-center gap-4">
                             <img src="{% if item.product.main_image %}{{ item.product.main_image.url }}{% else %}{% static 'img/placeholder.svg' %}{% endif %}"
@@ -23,7 +43,6 @@
                                 </div>
                             </div>
                             <div class="flex items-center gap-2">
-                                {# − მხოლოდ ამ რიგის განახლება #}
                                 <form method="post"
                                       hx-post="{% url 'cart:update_item' item.id %}"
                                       hx-target="#cart-item-{{ item.id }}"
@@ -37,7 +56,6 @@
                                     <button type="submit" class="w-8 h-8 rounded-lg border card">−</button>
                                 </form>
                                 <span class="min-w-[2ch] text-center">{{ item.quantity }}</span>
-                                {# + მხოლოდ ამ რიგის განახლება #}
                                 <form method="post"
                                       hx-post="{% url 'cart:update_item' item.id %}"
                                       hx-target="#cart-item-{{ item.id }}"
@@ -52,7 +70,6 @@
                                 </form>
                             </div>
                             <div class="w-28 text-right font-semibold">{{ item.total_price }}</div>
-                            {# Remove – სრულ სიას აახლებს, მაგრამ innerHTML-ით, რომ wrapper არ გაქრეს #}
                             <form method="post"
                                   class="ml-2"
                                   hx-post="{% url 'cart:remove_item' item.id %}"
@@ -68,7 +85,7 @@
                         </div>
                     {% endfor %}
                 </div>
-                {# Subtotal – განახლდება OOB-ით ყველა პასუხში #}
+                {# Subtotal (OOB-ს ვტოვებ უცვლელად) #}
                 <div id="cart-subtotal"
                      hx-swap-oob="true"
                      class="mt-6 flex items-center justify-between">
@@ -76,23 +93,43 @@
                         <span class="muted">Subtotal</span>
                         <span class="font-semibold">{{ cart.subtotal }}</span>
                     </div>
-                    {# Clear – innerHTML swap, wrapper უცვლელი #}
-                    <form method="post"
-                          hx-post="{% url 'cart:clear' %}"
-                          hx-target="#cart-summary"
-                          hx-select="#cart-summary > *"
-                          hx-swap="innerHTML"
-                          hx-sync="#cart-summary:queue"
-                          hx-disabled-elt="button"
-                          hx-push-url="false">
-                        {% csrf_token %}
-                        <button type="submit" class="px-4 py-2 rounded-xl border card">Clear cart</button>
-                    </form>
+                    <div class="flex items-center gap-2">
+                        <form method="post"
+                              hx-post="{% url 'cart:clear' %}"
+                              hx-target="#cart-summary"
+                              hx-select="#cart-summary > *"
+                              hx-swap="innerHTML"
+                              hx-sync="#cart-summary:queue"
+                              hx-disabled-elt="button"
+                              hx-push-url="false">
+                            {% csrf_token %}
+                            <button type="submit" class="px-4 py-2 rounded-xl border card">Clear cart</button>
+                        </form>
+                        <a href="{% url 'orders:checkout' %}"
+                           class="px-4 py-2 rounded-xl brand-btn hover:opacity-90 transition">Checkout</a>
+                    </div>
+                </div>
+                {# Mobile sticky checkout bar — cart-summary-ის შიგნით, რომ HTMX-მა განაახლოს #}
+                <div class="md:hidden fixed bottom-4 inset-x-0 z-40">
+                    <div class="max-w-7xl mx-auto px-4">
+                        <div class="rounded-2xl border surface shadow-soft px-3 py-3 flex items-center justify-between">
+                            <div class="text-sm">
+                                <span class="muted">Subtotal</span>
+                                <span class="font-semibold">{{ cart.subtotal }}</span>
+                            </div>
+                            <a href="{% url 'orders:checkout' %}"
+                               class="px-4 py-2 rounded-xl brand-btn text-sm">Checkout</a>
+                        </div>
+                    </div>
                 </div>
             {% else %}
                 <div class="rounded-2xl border card p-12 text-center">
                     <p class="muted">Your cart is empty</p>
                     <p class="mt-2 text-sm muted">Start adding products to see them here.</p>
+                    <div class="mt-4">
+                        <a href="{% url 'core:catalog_all' %}"
+                           class="px-4 py-2 rounded-xl brand-btn text-sm">Browse catalog</a>
+                    </div>
                 </div>
             {% endif %}
         </div>

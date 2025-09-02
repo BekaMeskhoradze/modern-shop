@@ -1,31 +1,47 @@
 {% load static %}
 <div id="cart-modal">
-    {% if error_message %}<div class="mb-3 rounded-xl border p-3 text-red-600">⚠ {{ error_message }}</div>{% endif %}
+    {% if error_message %}
+        <div class="mb-3 rounded-xl border card px-3 py-2 text-red-600">⚠ {{ error_message }}</div>
+    {% endif %}
     {% if cart.total_items %}
         <div class="space-y-4">
             {% for item in items %}
                 {% include "cart/cart_item.html" with item=item %}
             {% endfor %}
         </div>
-        <div class="mt-4 flex items-center justify-between">
-            <div class="text-lg">
-                <span class="muted">Subtotal</span>
-                <span class="font-semibold">{{ cart.subtotal|floatformat:2 }}</span>
+        <!-- Subtotal -->
+        <div class="mt-4">
+            <div class="flex items-center justify-between">
+                <div class="text-lg">
+                    <span class="muted">Subtotal</span>
+                    <span class="font-semibold">{{ cart.subtotal|floatformat:2 }}</span>
+                </div>
             </div>
-            <div class="flex items-center gap-2">
-                <form method="post"
-                      hx-post="{% url 'cart:clear' %}"
-                      hx-target="#cart-modal"
-                      hx-swap="outerHTML"
-                      hx-select="#cart-modal"
-                      hx-sync="#cart-modal:queue"
-                      hx-disabled-elt="button">
-                    {% csrf_token %}
-                    <button type="submit" class="px-4 py-2 rounded-xl border card">Clear cart</button>
-                </form>
-                <a href="{% url 'cart:summary' %}"
-                   class="px-4 py-2 rounded-xl brand-btn"
-                   onclick="closeCartModal()">View cart</a>
+            <!-- Actions -->
+            <div class="mt-3 flex flex-wrap items-center justify-between gap-2">
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="{% url 'core:catalog_all' %}"
+                       class="px-3 py-2 rounded-xl border card text-sm"
+                       onclick="closeCartModal()">Continue shopping</a>
+                    <form method="post"
+                          hx-post="{% url 'cart:clear' %}"
+                          hx-target="#cart-modal"
+                          hx-swap="outerHTML"
+                          hx-select="#cart-modal"
+                          hx-sync="#cart-modal:queue"
+                          hx-disabled-elt="button">
+                        {% csrf_token %}
+                        <button type="submit" class="px-3 py-2 rounded-xl border card text-sm">Clear cart</button>
+                    </form>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <a href="{% url 'cart:summary' %}"
+                       class="px-3 py-2 rounded-xl border card text-sm"
+                       onclick="closeCartModal()">View cart</a>
+                    <a href="{% url 'orders:checkout' %}"
+                       class="px-4 py-2 rounded-xl brand-btn text-sm hover:opacity-90 transition"
+                       onclick="closeCartModal()">Checkout</a>
+                </div>
             </div>
         </div>
     {% else %}

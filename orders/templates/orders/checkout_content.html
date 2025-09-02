@@ -1,0 +1,93 @@
+{% if error_message %}<div class="mb-4 rounded-xl border card px-4 py-3 text-sm">{{ error_message }}</div>{% endif %}
+<form method="post"
+      action="{% url 'orders:checkout' %}"
+      hx-post="{% url 'orders:checkout' %}"
+      hx-target="#checkout-root"
+      hx-swap="innerHTML"
+      class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% csrf_token %}
+    <!-- LEFT -->
+    <div class="md:col-span-2 space-y-6">
+        <!-- Contact -->
+        <section class="rounded-2xl border card shadow-soft p-5">
+            <h2 class="text-base font-semibold mb-4">Contact</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="text-xs muted">First name</label>
+                    {{ form.first_name }}
+                    {% if form.first_name.errors %}<p class="text-xs text-red-600 mt-1">{{ form.first_name.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="text-xs muted">Last name</label>
+                    {{ form.last_name }}
+                    {% if form.last_name.errors %}<p class="text-xs text-red-600 mt-1">{{ form.last_name.errors.0 }}</p>{% endif %}
+                </div>
+                <div class="md:col-span-2">
+                    <label class="text-xs muted">Email</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}<p class="text-xs text-red-600 mt-1">{{ form.email.errors.0 }}</p>{% endif %}
+                </div>
+                <div>
+                    <label class="text-xs muted">Phone</label>
+                    {{ form.phone }}
+                </div>
+                <div>
+                    <label class="text-xs muted">Company (optional)</label>
+                    {{ form.company }}
+                </div>
+            </div>
+        </section>
+        <!-- Address -->
+        <section class="rounded-2xl border card shadow-soft p-5">
+            <h2 class="text-base font-semibold mb-4">Shipping address</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs muted">Address line 1</label>
+                    {{ form.address1 }}
+                </div>
+                <div>
+                    <label class="text-xs muted">Address line 2</label>
+                    {{ form.address2 }}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-xs muted">City</label>
+                        {{ form.city }}
+                    </div>
+                    <div>
+                        <label class="text-xs muted">Province / State</label>
+                        {{ form.province }}
+                    </div>
+                    <div>
+                        <label class="text-xs muted">Postal code</label>
+                        {{ form.postal_code }}
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs muted">Country</label>
+                        {{ form.country }}
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Payment -->
+        <section class="rounded-2xl border card shadow-soft p-5">
+            <h2 class="text-base font-semibold mb-4">Payment method</h2>
+            <label class="flex items-center gap-3 cursor-pointer">
+                <input type="radio"
+                       name="payment_provider"
+                       value="stripe"
+                       checked
+                       class="h-4 w-4">
+                <span class="text-sm">Stripe</span>
+                <span class="ml-auto text-xs muted">Test: 4242 4242 4242 4242</span>
+            </label>
+            {# Heleket-ს მერე დავამატებთ #}
+        </section>
+    </div>
+    <!-- RIGHT -->
+    <aside class="md:col-span-1">
+        {% include "orders/partials/summary.html" with cart=cart cart_items=cart_items total_price=total_price %}
+    </aside>
+</form>

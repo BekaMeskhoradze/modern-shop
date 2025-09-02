@@ -2,7 +2,7 @@
 from django.db import transaction
 from django.db.models import F
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views import View
 from django.views.generic import TemplateView
 
@@ -10,38 +10,11 @@ from .models import Cart, CartItem
 from core.models import Product, ProductSize
 
 
-# ---------- Helpers ----------
-
-def _get_or_create_cart(request):
-    """
-    აბრუნებს მიმდინარე სესიის კალათას.
-    (იმუშავებს როგორც middleware-ის request.cart-ით, ისე მის გარეშე)
-    """
-    cart = getattr(request, "cart", None)
-    if cart:
-        return cart
-
-    if not request.session.session_key:
-        request.session.save()  # შექმნის session_key-ს
-
-    cart, _ = Cart.objects.get_or_create(session_key=request.session.session_key)
-    return cart
-
-
-def _cart_context(request):
-    cart = _get_or_create_cart(request)
-    items = cart.items.select_related("product", "product_size__size")
-    return {"cart": cart, "items": items}
-
-
-def _which_template(request) -> str:
-    hx_target = request.headers.get("HX-Target", "")
-    if hx_target == "cart-summary" or hx_target.startswith("cart-item-"):
-        return "cart/cart_summary.html"
-    return "cart/cart_modal.html"
-
-
+# --------------------------
+# Helpers
+# --------------------------
 def _recalculate(cart: Cart):
+    """Recalculate totals safely (fallback if the model has no custom method)."""
     if hasattr(cart, "recalculate") and callable(cart.recalculate):
         cart.recalculate()
         return
@@ -49,7 +22,6 @@ def _recalculate(cart: Cart):
         cart.update_totals()
         return
 
-    # ფოლბექი
     try:
         items = cart.items.select_related("product")
         total_qty = sum(i.quantity for i in items)
@@ -58,66 +30,101 @@ def _recalculate(cart: Cart):
         except Exception:
             subtotal = 0
 
-        dirty_fields = []
+        dirty = []
         if hasattr(cart, "total_items"):
             cart.total_items = total_qty
-            dirty_fields.append("total_items")
+            dirty.append("total_items")
         if hasattr(cart, "subtotal"):
             cart.subtotal = subtotal
-            dirty_fields.append("subtotal")
-        if dirty_fields:
-            cart.save(update_fields=dirty_fields)
+            dirty.append("subtotal")
+        if dirty:
+            cart.save(update_fields=dirty)
     except Exception:
-        # UI არ უნდა დაეგდოს
+        # UI-ს არ ვაქცევინოთ erroრ
         pass
 
 
-# ---------- Views ----------
+# --------------------------
+# Cart mixin
+# --------------------------
+class CartMixin:
+    """Reusable helpers for all cart views."""
 
-class CartModalView(View):
-    """Cart-ის გვერდითი მოდალი (HTMX)"""
+    def get_cart(self, request):
+        # თუ middleware-მა უკვე მიაბა, გამოვიყენოთ ის
+        cart = getattr(request, "cart", None)
+        if cart:
+            return cart
+
+        # შექმენი სესია უსაფრთხოდ (create() ძველს "ფლუშავს"; save() — არა)
+        if not request.session.session_key:
+            request.session.save()
+
+        cart, _ = Cart.objects.get_or_create(session_key=request.session.session_key)
+        return cart
+
+    def get_items(self, cart):
+        return cart.items.select_related("product", "product_size__size")
+
+    def pick_template(self, request) -> str:
+        """
+        If the target is the big container or specific row, return the full summary.
+        Otherwise return the side modal template.
+        """
+        hx_target = request.headers.get("HX-Target", "") or ""
+        if hx_target == "cart-summary" or hx_target.startswith("cart-item-"):
+            return "cart/cart_summary.html"
+        return "cart/cart_modal.html"
+
+    def render_cart(self, request, context: dict | None = None, *, force_template: str | None = None):
+        cart = self.get_cart(request)
+        base = {"cart": cart, "items": self.get_items(cart)}
+        if context:
+            base.update(context)
+        template = force_template or self.pick_template(request)
+        return render(request, template, base)
+
+
+# --------------------------
+# Views
+# --------------------------
+class CartModalView(CartMixin, View):
     http_method_names = ["get"]
 
     def get(self, request):
-        context = _cart_context(request)
-        return render(request, "cart/cart_modal.html", context)
+        return self.render_cart(request, force_template="cart/cart_modal.html")
 
 
-class CartCountView(View):
-    """ბეჯის ქაუნთერი (JSON)"""
+class CartCountView(CartMixin, View):
     http_method_names = ["get"]
 
     def get(self, request):
-        cart = _get_or_create_cart(request)
+        cart = self.get_cart(request)
         total = getattr(cart, "total_items", None)
         if total is None:
             total = sum(i.quantity for i in cart.items.all())
         return JsonResponse({"total_items": total})
 
 
-class AddToCartView(View):
-    """
-    პროდუქტის დამატება კალათაში. POST: size_id (არასავალდებულო), quantity.
-    """
+class AddToCartView(CartMixin, View):
     http_method_names = ["get", "post"]
 
     def get(self, request, slug):
-        # პირდაპირ მისამართზე რომ არ დააგდოს 405 — გადავიყვანოთ პროდუქტზე
         product = get_object_or_404(Product, slug=slug)
         return redirect(product.get_absolute_url())
 
     def post(self, request, slug):
-        cart = _get_or_create_cart(request)
+        cart = self.get_cart(request)
         product = get_object_or_404(Product, slug=slug)
 
-        # რაოდენობა (>=1)
+        # qty (>=1)
         try:
             qty = int(request.POST.get("quantity", "1"))
         except ValueError:
             qty = 1
         qty = max(qty, 1)
 
-        # ზომა — თუ გადმოვიდა, უნდა ეკუთვნოდეს ამავე პროდუქტს
+        # size (optional, უნდა ეკუთვნოდეს ამ პროდუქტს)
         size_id = request.POST.get("size_id")
         product_size = None
         if size_id:
@@ -130,33 +137,24 @@ class AddToCartView(View):
             item = qs.first()
 
             if item:
-                item.quantity = F("quantity") + qty
-                item.save(update_fields=["quantity"])
-                item.refresh_from_db(fields=["quantity"])
+                CartItem.objects.filter(id=item.id).update(quantity=F("quantity") + qty)
             else:
                 CartItem.objects.create(
-                    cart=cart,
-                    product=product,
-                    product_size=product_size,
-                    quantity=qty,
+                    cart=cart, product=product, product_size=product_size, quantity=qty
                 )
 
         _recalculate(cart)
-        context = _cart_context(request)
-        template = _which_template(request)
-        return render(request, template, context)
+        return self.render_cart(request)
 
 
-class UpdateItemView(View):
-    """qty inc/dec ან პირდაპირი რაოდენობის ცვლა"""
+class UpdateItemView(CartMixin, View):
     http_method_names = ["get", "post"]
 
     def get(self, request, item_id):
-        # Fallback 405-ის ნაცვლად
         return redirect("cart:summary")
 
     def post(self, request, item_id):
-        cart = _get_or_create_cart(request)
+        cart = self.get_cart(request)
         item = get_object_or_404(CartItem, id=item_id, cart=cart)
 
         action = request.POST.get("action")
@@ -181,58 +179,42 @@ class UpdateItemView(View):
                     CartItem.objects.filter(id=item.id).update(quantity=q)
 
         _recalculate(cart)
-        context = _cart_context(request)
-        template = _which_template(request)
-        return render(request, template, context)
+        return self.render_cart(request)
 
 
-class RemoveItemView(View):
+class RemoveItemView(CartMixin, View):
     http_method_names = ["get", "post"]
 
     def get(self, request, item_id):
         return redirect("cart:summary")
 
     def post(self, request, item_id):
-        cart = _get_or_create_cart(request)
+        cart = self.get_cart(request)
         item = get_object_or_404(CartItem, id=item_id, cart=cart)
         item.delete()
         _recalculate(cart)
-
-        context = _cart_context(request)
-        template = _which_template(request)
-        return render(request, template, context)
+        return self.render_cart(request)
 
 
-class ClearCartView(View):
+class ClearCartView(CartMixin, View):
     http_method_names = ["get", "post"]
 
     def get(self, request):
         return redirect("cart:summary")
 
     def post(self, request):
-        cart = _get_or_create_cart(request)
+        cart = self.get_cart(request)
         cart.items.all().delete()
         _recalculate(cart)
-
-        context = _cart_context(request)
-        template = _which_template(request)
-        return render(request, template, context)
+        return self.render_cart(request)
 
 
-class CartSummaryView(TemplateView):
-    """Cart-ის სრული გვერდი (/cart/)"""
+class CartSummaryView(CartMixin, TemplateView):
     template_name = "cart/cart_summary.html"
     http_method_names = ["get"]
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        cart = getattr(self.request, "cart", None)
-        if cart is None:
-            if not self.request.session.session_key:
-                self.request.session.save()
-            session_key = self.request.session.session_key
-            cart, _ = Cart.objects.get_or_create(session_key=session_key)
-
-        items = cart.items.select_related("product", "product_size__size")
-        ctx.update({"cart": cart, "items": items})
+        cart = self.get_cart(self.request)
+        ctx.update({"cart": cart, "items": self.get_items(cart)})
         return ctx

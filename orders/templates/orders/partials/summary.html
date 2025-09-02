@@ -1,0 +1,46 @@
+<div class="rounded-2xl border card shadow-soft p-5">
+    <h2 class="text-lg font-semibold mb-4">Order summary</h2>
+    <ul class="space-y-4 max-h-80 overflow-auto pr-1">
+        {% for item in cart_items %}
+            <li class="flex items-center gap-3">
+                {% if item.product.image %}
+                    <img src="{{ item.product.image.url }}"
+                         alt="{{ item.product.name }}"
+                         class="h-12 w-12 rounded-md object-cover border"
+                         style="border-color: var(--line)" />
+                {% else %}
+                    <div class="h-12 w-12 rounded-md border grid place-items-center text-xs muted"
+                         style="border-color: var(--line)">Img</div>
+                {% endif %}
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-medium truncate">{{ item.product.name }}</div>
+                    <div class="text-xs muted">Size: {{ item.product_size.size.name }} • Qty: {{ item.quantity }}</div>
+                </div>
+                <div class="text-sm whitespace-nowrap">{{ item.product.price }} ₾</div>
+            </li>
+        {% empty %}
+            <li class="text-sm muted">Your cart is empty.</li>
+        {% endfor %}
+    </ul>
+    <div class="my-4 border-t" style="border-color: var(--line)"></div>
+    <div class="text-sm space-y-2">
+        <div class="flex justify-between">
+            <span>Subtotal</span><span>{{ total_price }} ₾</span>
+        </div>
+        <div class="flex justify-between muted">
+            <span>Shipping</span><span>—</span>
+        </div>
+        <div class="flex justify-between muted">
+            <span>Discount</span><span>—</span>
+        </div>
+    </div>
+    <div class="my-4 border-t" style="border-color: var(--line)"></div>
+    <div class="flex justify-between text-sm font-semibold">
+        <span>Total</span>
+        <span>{{ total_price }} ₾</span>
+    </div>
+    <button type="submit"
+            class="w-full mt-4 rounded-xl brand-btn py-2.5 text-sm hover:opacity-90 transition">
+        Pay with Stripe
+    </button>
+</div>

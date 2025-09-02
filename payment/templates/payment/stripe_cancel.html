@@ -1,0 +1,12 @@
+{% extends "core/base.html" %}
+{% block title %}Payment canceled — Modern Shop{% endblock %}
+{% block content %}
+    <div class="max-w-3xl mx-auto px-4 py-10 text-center">
+        <h1 class="text-2xl font-semibold mb-3">Payment canceled</h1>
+        <p class="mb-6">
+            Order <span class="font-medium">#{{ order.id }}</span> was marked as canceled.
+        </p>
+        <a href="{% url 'orders:checkout' %}"
+           class="rounded-md border px-4 py-2 text-sm">Back to checkout</a>
+    </div>
+{% endblock %}
